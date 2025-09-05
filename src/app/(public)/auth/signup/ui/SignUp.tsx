@@ -38,8 +38,8 @@ const SignUp: React.FC = () => {
         e.preventDefault();
         setError("");
 
-        if (!form.terms) {
-            setError("You must agree to the Terms and Privacy Policy");
+        if (!form.email.trim() || !form.password.trim() || !form.confirmPassword.trim()) {
+            setError("All fields are required");
             return;
         }
 
@@ -47,6 +47,12 @@ const SignUp: React.FC = () => {
             setError("Passwords do not match");
             return;
         }
+        
+        if (!form.terms) {
+            setError("You must agree to the Terms and Privacy Policy");
+            return;
+        }
+
 
         console.log("Form submitted:", form);
     };
@@ -60,20 +66,23 @@ const SignUp: React.FC = () => {
         form.terms;
 
     return (
-        <div className="flex flex-col gap-3 w-full max-w-xl justify-center items-center">
+        <div className="flex flex-col gap-3 w-full max-w-xl justify-center items-center space-y-4">
             <div className="flex flex-col items-center">
                 <Image src="/logo.png" alt="Logo" width={100} height={100} />
             </div>
 
-            <h1 className="font-semibold text-xl">Create your account</h1>
-            <p className="text-xs text-[#212121]">
-                Enter your details to create your account
-            </p>
+            <div className="text-center space-y-2">
+                <h1 className="font-semibold text-xl">Create your account</h1>
+                <p className="text-xs text-[#212121]">
+                    Enter your details to create your account
+                </p>
+            </div>
 
-            <form onSubmit={handleSubmit} className="w-full gap-3">
+
+            <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
                 {/* Email */}
                 <label htmlFor="email" className="text-sm font-medium">
-                    Email Address
+                    Email
                 </label>
                 <input
                     type="email"
@@ -106,7 +115,7 @@ const SignUp: React.FC = () => {
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="absolute inset-y-0 right-2 flex items-center text-gray-500"
                     >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPassword ? <EyeOff size={18} className="cursor-pointer"/> : <Eye size={18} className="cursor-pointer"/>}
                     </button>
                 </div>
 
@@ -162,20 +171,16 @@ const SignUp: React.FC = () => {
                 {/* Sign Up Button */}
                 <button
                     type="submit"
-                    disabled={!isFormValid}
-                    className={`w-full py-2 rounded-md transition duration-200  bg-[#13672B] text-white hover:bg-[#097d2a] ${isFormValid
-                            ? "cursor-pointer"
-                            : "cursor-not-allowed"
-                        }`}
+                    className="w-full mt-3 py-2 rounded-md transition duration-200 bg-[#13672B] text-white hover:bg-[#097d2a] cursor-pointer"
                 >
                     Sign Up
                 </button>
             </form>
 
             <div className="flex items-center my-6 w-full">
-                <div className="flex-grow border-t-2 border-gray-400"></div>
+                <div className="flex-grow border-t-[1px] border-gray-400"></div>
                 <span className="px-3 text-gray-500 text-sm">or continue with</span>
-                <div className="flex-grow border-t-2 border-gray-400"></div>
+                <div className="flex-grow border-t-[1px] border-gray-400"></div>
             </div>
 
             {/* Social auth buttons */}
@@ -189,7 +194,7 @@ const SignUp: React.FC = () => {
             </div>
 
             <Link href="/signin">
-                <p>
+                <p className="text-sm">
                     Already have an account?{" "}
                     <span className="text-[#13672B] font-semibold cursor-pointer underline">
                         Login
