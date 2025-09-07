@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+
 interface FormState {
     email: string;
     password: string;
@@ -11,6 +12,9 @@ interface FormState {
 }
 
 type HandleSubmitEvent = React.FormEvent<HTMLFormElement>;
+
+const SIGNUP_URL = "http://localhost:5000/api/users";
+const GOOGLE_URL = "http://localhost:5000/api/auth/google"; 
 
 const SignUp: React.FC = () => {
     const [form, setForm] = useState<FormState>({
@@ -23,6 +27,7 @@ const SignUp: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement>
@@ -34,7 +39,7 @@ const SignUp: React.FC = () => {
         }));
     };
 
-    const handleSubmit = (e: HandleSubmitEvent): void => {
+    const handleSubmit = async (e: HandleSubmitEvent): Promise<void> => {
         e.preventDefault();
         setError("");
 
@@ -47,26 +52,42 @@ const SignUp: React.FC = () => {
             setError("Passwords do not match");
             return;
         }
-        
+
         if (!form.terms) {
             setError("You must agree to the Terms and Privacy Policy");
             return;
         }
 
+        try {
+            setLoading(true);
+            const res = await fetch(SIGNUP_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: form.email,
+                    password: form.password,
+                }),
+            });
 
-        console.log("Form submitted:", form);
+            if (!res.ok) {
+                const errData = await res.json();
+                setError(errData.message || "Signup failed");
+                return;
+            }
+
+            const data = await res.json();
+            console.log("User created successfully:", data);
+
+        } catch (err) {
+            console.error(err);
+            setError("Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // form validation
-    const isFormValid =
-        form.email.trim() !== "" &&
-        form.password.trim() !== "" &&
-        form.confirmPassword.trim() !== "" &&
-        form.password === form.confirmPassword &&
-        form.terms;
-
     return (
-        <div className="flex flex-col gap-3 w-full max-w-xl justify-center items-center space-y-4">
+        <div className="flex flex-col gap-3 w-full max-w-xl justify-center items-center">
             <div className="flex flex-col items-center">
                 <Image src="/logo.png" alt="Logo" width={100} height={100} />
             </div>
@@ -77,7 +98,6 @@ const SignUp: React.FC = () => {
                     Enter your details to create your account
                 </p>
             </div>
-
 
             <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
                 {/* Email */}
@@ -92,7 +112,7 @@ const SignUp: React.FC = () => {
                     onChange={handleChange}
                     placeholder="Enter your email address"
                     required
-                    className="w-full border border-[#212121] rounded-md p-2 mb-3 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+                    className="w-full border border-[#212121] focus:border-none rounded-md p-2 mb-3 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
                 />
 
                 {/* Password */}
@@ -108,14 +128,14 @@ const SignUp: React.FC = () => {
                         onChange={handleChange}
                         placeholder="Enter your password"
                         required
-                        className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+                        className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:border-none focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
                         className="absolute inset-y-0 right-2 flex items-center text-gray-500"
                     >
-                        {showPassword ? <EyeOff size={18} className="cursor-pointer"/> : <Eye size={18} className="cursor-pointer"/>}
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                 </div>
 
@@ -132,7 +152,7 @@ const SignUp: React.FC = () => {
                         onChange={handleChange}
                         placeholder="Confirm your password"
                         required
-                        className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+                        className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:border-none focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
                     />
                     <button
                         type="button"
@@ -171,9 +191,10 @@ const SignUp: React.FC = () => {
                 {/* Sign Up Button */}
                 <button
                     type="submit"
-                    className="w-full mt-3 py-2 rounded-md transition duration-200 bg-[#13672B] text-white hover:bg-[#097d2a] cursor-pointer"
+                    disabled={loading}
+                    className="w-full mt-3 py-2 rounded-md transition duration-200 bg-[#13672B] text-white hover:bg-[#097d2a] cursor-pointer text-sm disabled:opacity-50"
                 >
-                    Sign Up
+                    {loading ? "Signing Up..." : "Sign Up"}
                 </button>
             </form>
 
@@ -184,17 +205,21 @@ const SignUp: React.FC = () => {
             </div>
 
             {/* Social auth buttons */}
-            <div className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer mb-3">
+            <div
+                onClick={() => window.location.href = GOOGLE_URL}
+                className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer mb-3"
+            >
                 <Image src="/google.png" alt="Google Icon" width={20} height={20} />
                 <p className="ml-2 text-sm font-medium">Sign Up with Google</p>
             </div>
+
             <div className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer">
                 <Image src="/linkedin.png" alt="LinkedIn Icon" width={20} height={20} />
                 <p className="ml-2 text-sm font-medium">Sign Up with LinkedIn</p>
             </div>
 
-            <Link href="/signin">
-                <p className="text-sm">
+            <Link href="/auth/signin">
+                <p className="text-xs mt-3">
                     Already have an account?{" "}
                     <span className="text-[#13672B] font-semibold cursor-pointer underline">
                         Login

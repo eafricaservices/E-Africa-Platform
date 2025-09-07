@@ -2,12 +2,12 @@ import Image from "next/image";
 
 export default function SideImage() {
     return (
-        <div className="bg-[#26CD56] p-10 h-[80vh] rounded-2xl">
-            <div className="flex justify-center items-center h-full">
+        <div className="bg-[#26CD56] p-10 rounded-2xl h-full flex justify-center items-center">
+            <div className="">
                 <Image
                     src="/side-image.png"
                     alt="Side Image"
-                    width={300}
+                    width={250}
                     height={400}
                 />
             </div>
