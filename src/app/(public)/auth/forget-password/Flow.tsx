@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  sendResetCode,
+  verifyResetCode,
+  updateResetPassword,
+} from "@/lib/api/endpoints/auth";
+import { CodeSchema, PasswordSchema } from "@/lib/api/schemas/auth";
+import { ApiError } from "@/lib/api/client";
 import EmailRequest from "./ui/EmailRequest";
 import ConfirmMail from "./ui/ConfirmMail";
 import NewPasswordPage from "./ui/NewPassword";
@@ -16,94 +23,50 @@ export default function Flow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "https://e-africa-platform-backend.onrender.com";
-
   async function sendVerificationCode(targetEmail: string) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/verification/reset-password/request`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify({ email: targetEmail.trim() }),
-        }
-      );
-
-      if (!res.ok) {
-        const pickMsg = (d: any): string => {
-          if (!d) return "";
-          if (typeof d === "string") return d;
-          if (typeof d.message === "string") return d.message;
-          if (typeof d.error === "string") return d.error;
-          if (Array.isArray(d)) return d.map(pickMsg).filter(Boolean).join(" ");
-          if (typeof d === "object") {
-            for (const v of Object.values(d)) {
-              const m = pickMsg(v);
-              if (m) return m;
-            }
-          }
-          return "";
-        };
-
-        let serverMsg = "";
-        try {
-          const ct = res.headers.get("content-type") || "";
-          if (ct.includes("application/json")) {
-            const data = await res.json();
-            serverMsg = pickMsg(data);
-          } else {
-            serverMsg = await res.text();
-          }
-        } catch {}
-
-        const msg =
-          serverMsg ||
-          (res.status === 400 || res.status === 422
-            ? "Please enter a valid email address."
-            : res.status === 404
-            ? "We couldn’t reach the verification service. Please try again."
-            : res.status === 409
-            ? "A code was just sent. Please check your inbox."
-            : res.status === 429
-            ? "Too many attempts. Please wait a minute and try again."
-            : res.status >= 500
-            ? "Something went wrong on our side. Please try again later."
-            : "We couldn’t send the code right now. Please try again.");
-
-        throw new Error(msg);
-      }
-
+      await sendResetCode({ email: targetEmail.trim() });
       setEmail(targetEmail.trim());
       setStep("confirm");
     } catch (err: any) {
-      const networkMsg =
-        err?.message?.includes("Failed to fetch") ||
-        err?.message?.includes("NetworkError")
-          ? "Can’t reach the server. Please check your connection and try again."
+      const msg =
+        err instanceof ApiError
+          ? err.message
           : err?.message ||
             "We couldn’t send the code right now. Please try again.";
-      setError(networkMsg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
   }
 
-  // Confirm screen collects code only, then New Password submits verification+reset
+  // Confirm screen verifies code; only after success proceed to NewPassword
   const acceptCodeAndProceed = async (sixCode: string) => {
-    if (!sixCode || sixCode.length !== 6) {
-      setError("Enter the 6‑digit code sent to your email.");
+    try {
+      CodeSchema.parse(sixCode);
+    } catch (e: any) {
+      const first = e?.errors?.[0]?.message as string | undefined;
+      setError(first || "Enter the 6‑digit code sent to your email.");
       return;
     }
-    setCode(sixCode);
+    setLoading(true);
     setError(null);
-    setStep("new");
+    try {
+      await verifyResetCode({ email, code: sixCode });
+      setCode(sixCode);
+      setStep("new");
+    } catch (err: any) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err?.message ||
+            "Invalid or expired code. Please request a new one.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   async function submitNewPassword(newPassword: string) {
@@ -112,71 +75,24 @@ export default function Flow() {
       setStep("confirm");
       return;
     }
+    try {
+      PasswordSchema.parse(newPassword);
+    } catch (e: any) {
+      const first = e?.errors?.[0]?.message as string | undefined;
+      setError(first || "Please enter a valid password.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/verification/reset-password/verify`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify({ email, code, newPassword }),
-        }
-      );
-
-      if (!res.ok) {
-        const pickMsg = (d: any): string => {
-          if (!d) return "";
-          if (typeof d === "string") return d;
-          if (typeof d.message === "string") return d.message;
-          if (typeof d.error === "string") return d.error;
-          if (Array.isArray(d)) return d.map(pickMsg).filter(Boolean).join(" ");
-          if (typeof d === "object") {
-            for (const v of Object.values(d)) {
-              const m = pickMsg(v);
-              if (m) return m;
-            }
-          }
-          return "";
-        };
-
-        let serverMsg = "";
-        try {
-          const ct = res.headers.get("content-type") || "";
-          if (ct.includes("application/json")) {
-            const data = await res.json();
-            serverMsg = pickMsg(data);
-          } else {
-            serverMsg = await res.text();
-          }
-        } catch {}
-
-        const msg =
-          serverMsg ||
-          (res.status === 400 || res.status === 422
-            ? "Please enter a valid password and code."
-            : res.status === 404
-            ? "This code is invalid or expired. Request a new one."
-            : res.status === 429
-            ? "Too many attempts. Please wait a minute and try again."
-            : res.status >= 500
-            ? "Something went wrong on our side. Please try again later."
-            : "Unable to reset your password. Please try again.");
-
-        throw new Error(msg);
-      }
-
+      await updateResetPassword({ email, code, newPassword });
       setStep("success");
     } catch (err: any) {
-      const networkMsg =
-        err?.message?.includes("Failed to fetch") ||
-        err?.message?.includes("NetworkError")
-          ? "Can’t reach the server. Please check your connection and try again."
+      const msg =
+        err instanceof ApiError
+          ? err.message
           : err?.message || "Unable to reset your password. Please try again.";
-      setError(networkMsg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
