@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Inter } from "next/font/google";
-import SideImage from "./ui/SideImage";
+import SideImage from "@/app/shared/SideImage";
 import SignUp from "./ui/SignUp";
 
 const inter = Inter({ subsets: ["latin"] });
