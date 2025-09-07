@@ -134,9 +134,11 @@ const Login: React.FC = () => {
             </label>
           </div>
 
+          <Link href="/auth/forget-password">
           <p className="text-[#13672B] underline text-xs cursor-pointer">
             Forgot Password?
           </p>
+          </Link>
         </div>
 
         {/* Error */}
