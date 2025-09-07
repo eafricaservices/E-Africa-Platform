@@ -6,6 +6,7 @@ import ConfirmMail from "./ui/ConfirmMail";
 import NewPasswordPage from "./ui/NewPassword";
 import ChangeSuccess from "./ui/ChangeSuccess";
 import SideImage from "./ui/SideImage";
+import Flow from "./Flow";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,10 +27,8 @@ const page = () => {
             className="mx-auto"
           />
         </div>
-        <EmailRequest />
-        {/* <ConfirmMail /> */}
-        {/* <NewPasswordPage /> */}
-        {/* <ChangeSuccess /> */}
+        {/* Flow */}
+        <Flow />
       </div>
     </div>
   );
