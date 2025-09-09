@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import VerifyEmailModal from "./VerifyEmailModal"; // check path
+import VerifyEmailModal from "./VerifyEmailModal";
+import { signUp, sendVerificationCode } from "@/lib/api/endpoints/auth";
 
 interface FormState {
   email: string;
@@ -14,9 +15,7 @@ interface FormState {
 
 type HandleSubmitEvent = React.FormEvent<HTMLFormElement>;
 
-const SIGNUP_URL = "http://localhost:5000/api/users";
-const SEND_CODE_URL = "http://localhost:5000/api/verification/send-code";
-const GOOGLE_URL = "http://localhost:5000/api/auth/google";
+const GOOGLE_URL = process.env.NEXT_PUBLIC_API_URL + "/auth/google";
 
 const SignUp: React.FC = () => {
   const [form, setForm] = useState<FormState>({
@@ -61,40 +60,14 @@ const SignUp: React.FC = () => {
 
     try {
       setLoading(true);
-      // Signup user
-      const res = await fetch(SIGNUP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.message || "Signup failed");
-        return;
-      }
-
-      // Send verification code
-      const sendCodeRes = await fetch(SEND_CODE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email }),
-      });
-
-      if (!sendCodeRes.ok) {
-        setError("Failed to send verification code");
-        return;
-      }
-
-      // Open verify modal
+      // signup
+      await signUp({ email: form.email, password: form.password });
+      // send verification
+      await sendVerificationCode({ email: form.email });
+      // show modal
       setShowVerifyModal(true);
-
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -124,7 +97,7 @@ const SignUp: React.FC = () => {
           onChange={handleChange}
           placeholder="Enter your email address"
           required
-          className="w-full border border-[#212121] focus:border-none rounded-md p-2 mb-3 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+          className="w-full border border-[#212121] rounded-md p-2 mb-3 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs text-sm"
         />
 
         {/* Password */}
@@ -138,7 +111,7 @@ const SignUp: React.FC = () => {
             onChange={handleChange}
             placeholder="Enter your password"
             required
-            className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:border-none focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+            className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs text-sm"
           />
           <button
             type="button"
@@ -160,7 +133,7 @@ const SignUp: React.FC = () => {
             onChange={handleChange}
             placeholder="Confirm your password"
             required
-            className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:border-none focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+            className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs text-sm"
           />
           <button
             type="button"
@@ -193,44 +166,36 @@ const SignUp: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-3 py-2 rounded-md transition duration-200 bg-[#13672B] text-white hover:bg-[#097d2a] cursor-pointer text-sm disabled:opacity-50"
+          className="w-full mt-3 py-2 rounded-md bg-[#13672B] text-white hover:bg-[#097d2a] text-sm disabled:opacity-50"
         >
           {loading ? "Signing Up..." : "Sign Up"}
         </button>
       </form>
 
       <div className="flex items-center my-6 w-full">
-        <div className="flex-grow border-t-[1px] border-gray-400"></div>
+        <div className="flex-grow border-t border-gray-400"></div>
         <span className="px-3 text-gray-500 text-sm">or continue with</span>
-        <div className="flex-grow border-t-[1px] border-gray-400"></div>
+        <div className="flex-grow border-t border-gray-400"></div>
       </div>
 
       {/* Social auth buttons */}
       <div
         onClick={() => (window.location.href = GOOGLE_URL)}
-        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer mb-3"
+        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] cursor-pointer mb-3"
       >
         <Image src="/google.png" alt="Google Icon" width={20} height={20} />
         <p className="ml-2 text-sm font-medium">Sign Up with Google</p>
       </div>
 
-      <div className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer">
-        <Image src="/linkedin.png" alt="LinkedIn Icon" width={20} height={20} />
-        <p className="ml-2 text-sm font-medium">Sign Up with LinkedIn</p>
-      </div>
-
       <Link href="/auth/signin">
         <p className="text-xs mt-3">
           Already have an account?{" "}
-          <span className="text-[#13672B] font-semibold cursor-pointer underline">Login</span>
+          <span className="text-[#13672B] font-semibold underline">Login</span>
         </p>
       </Link>
 
       {showVerifyModal && (
-        <VerifyEmailModal
-          email={form.email}
-          onClose={() => setShowVerifyModal(false)}
-        />
+        <VerifyEmailModal email={form.email} onClose={() => setShowVerifyModal(false)} />
       )}
     </div>
   );

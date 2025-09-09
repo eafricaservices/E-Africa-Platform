@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { login, loginWithGoogle } from "@/lib/api/endpoints/auth"; 
 
 interface FormState {
   email: string;
@@ -18,12 +19,11 @@ const Login: React.FC = () => {
     password: "",
     remember: false,
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({
       ...prev,
@@ -31,25 +31,18 @@ const Login: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: HandleSubmitEvent): Promise<void> => {
+  const handleSubmit = async (e: HandleSubmitEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) {
-        throw new Error("Invalid credentials");
-      }
-
-      const data = await res.json();
+      const data = await login({ email: form.email, password: form.password });
       console.log("Login success:", data);
 
+      if (data?.token) {
+        localStorage.setItem("authToken", data.token);
+      }
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -57,16 +50,14 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/google"; 
-  };
-
   return (
     <div className="flex flex-col gap-3 w-full max-w-xl justify-center items-center">
+      {/* Logo */}
       <div className="flex flex-col items-center">
         <Image src="/logo.png" alt="Logo" width={100} height={100} />
       </div>
 
+      {/* Heading */}
       <div className="text-center space-y-2">
         <h1 className="font-semibold text-xl">Login to your account</h1>
         <p className="text-xs text-[#212121]">
@@ -74,6 +65,7 @@ const Login: React.FC = () => {
         </p>
       </div>
 
+      {/* Form */}
       <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
         {/* Email */}
         <label htmlFor="email" className="text-sm font-medium">
@@ -118,8 +110,8 @@ const Login: React.FC = () => {
           </button>
         </div>
 
+        {/* Remember Me + Forgot Password */}
         <div className="flex justify-between">
-          {/* Remember Me */}
           <div className="flex items-center space-x-2 cursor-pointer mb-3">
             <input
               type="checkbox"
@@ -133,11 +125,10 @@ const Login: React.FC = () => {
               Remember Me
             </label>
           </div>
-
           <Link href="/auth/forget-password">
-          <p className="text-[#13672B] underline text-xs cursor-pointer">
-            Forgot Password?
-          </p>
+            <p className="text-[#13672B] underline text-xs cursor-pointer">
+              Forgot Password?
+            </p>
           </Link>
         </div>
 
@@ -154,26 +145,23 @@ const Login: React.FC = () => {
         </button>
       </form>
 
+      {/* Divider */}
       <div className="flex items-center my-6 w-full">
-        <div className="flex-grow border-t-[1px] border-gray-400"></div>
+        <div className="flex-grow border-t border-gray-400"></div>
         <span className="px-3 text-gray-500 text-sm">or continue with</span>
-        <div className="flex-grow border-t-[1px] border-gray-400"></div>
+        <div className="flex-grow border-t border-gray-400"></div>
       </div>
 
-      {/* Social auth buttons */}
+      {/* Google Auth */}
       <div
-        onClick={handleGoogleLogin}
-        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer mb-3"
+        onClick={loginWithGoogle}
+        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
       >
         <Image src="/google.png" alt="Google Icon" width={20} height={20} />
         <p className="ml-2 text-sm font-medium">Login with Google</p>
       </div>
 
-      <div className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer">
-        <Image src="/linkedin.png" alt="LinkedIn Icon" width={20} height={20} />
-        <p className="ml-2 text-sm font-medium">Login with LinkedIn</p>
-      </div>
-
+      {/* Signup Link */}
       <Link href="/auth/signup">
         <p className="text-xs mt-3">
           New here?{" "}

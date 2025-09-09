@@ -9,6 +9,58 @@ import {
   BasicResponseSchema,
 } from "@/lib/api/schemas/auth";
 
+//create user
+export async function signUp(input: { email: string; password: string }) {
+  const email = EmailSchema.parse(input.email);
+  const password = PasswordSchema.parse(input.password);
+
+  return jsonFetch("/api/users", {
+    method: "POST",
+    body: { email, password },
+    responseSchema: BasicResponseSchema.optional(),
+  });
+}
+
+// Send verification code
+export async function sendVerificationCode(input: { email: string }) {
+  const email = EmailSchema.parse(input.email);
+
+  return jsonFetch("/api/verification/send-code", {
+    method: "POST",
+    body: { email },
+    responseSchema: BasicResponseSchema.optional(),
+  });
+}
+
+// verify email with OTP
+export async function verifyEmail(input: { email: string; code: string }) {
+  const email = EmailSchema.parse(input.email);
+  const code = CodeSchema.parse(input.code);
+
+  return jsonFetch("/api/verification/verify-email", {
+    method: "POST",
+    body: { email, code },
+    responseSchema: BasicResponseSchema.optional(),
+  });
+}
+
+// login user
+export async function login(input: { email: string; password: string }) {
+  const email = EmailSchema.parse(input.email);
+  const password = PasswordSchema.parse(input.password);
+
+  return jsonFetch("/api/auth/login", {
+    method: "POST",
+    body: { email, password },
+    responseSchema: z.any(), 
+  });
+}
+// google login (redirect-based)
+export async function loginWithGoogle() {
+  window.location.href = "/api/auth/google";
+}
+
+//reset password
 export async function sendResetCode(input: { email: string }): Promise<void> {
   const email = EmailSchema.parse(input.email);
   await jsonFetch("/api/verification/reset-password/request", {
@@ -18,6 +70,7 @@ export async function sendResetCode(input: { email: string }): Promise<void> {
   });
 }
 
+//verify password reset
 export async function verifyResetPassword(input: {
   email: string;
   code: string;
@@ -34,6 +87,7 @@ export async function verifyResetPassword(input: {
   });
 }
 
+//verify reset code
 export async function verifyResetCode(input: { email: string; code: string }) {
   const email = EmailSchema.parse(input.email);
   const code = CodeSchema.parse(input.code);
@@ -43,7 +97,7 @@ export async function verifyResetCode(input: { email: string; code: string }) {
     responseSchema: z.any(),
   });
 }
-
+//new password
 export async function updateResetPassword(input: {
   email: string;
   code: string;

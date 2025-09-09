@@ -1,9 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import EmailVerified from "./EmailVerifiedModal";
-
-const VERIFY_URL = "http://localhost:5000/api/verification/verify-email";
-const RESEND_URL = "http://localhost:5000/api/verification/send-code";
+import { sendVerificationCode, verifyEmail } from "@/lib/api/endpoints/auth";
 
 interface VerifyEmailModalProps {
   email: string;
@@ -56,16 +54,9 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ email, onClose }) =
 
     try {
       setLoading(true);
-      const res = await fetch(VERIFY_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: enteredOtp }),
-      });
-
-      if (!res.ok) throw new Error("OTP verification failed");
-
+      await verifyEmail({ email, code: enteredOtp });
       setVerified(true);
-    } catch (err) {
+    } catch (err: any) {
       setError("❌ Invalid OTP, please try again.");
     } finally {
       setLoading(false);
@@ -78,14 +69,7 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ email, onClose }) =
     setMessage("");
     try {
       setResending(true);
-      const res = await fetch(RESEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) throw new Error("Failed to resend OTP");
-
+      await sendVerificationCode({ email });
       setMessage("📨 A new OTP has been sent to your email.");
     } catch (err) {
       setError("❌ Failed to resend OTP, please try again.");
