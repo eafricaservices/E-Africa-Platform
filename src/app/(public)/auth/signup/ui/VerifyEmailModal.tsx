@@ -35,10 +35,15 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ email, onClose }) =
   // Handle backspace
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
+  const prevInput = document.getElementById(`otp-${index - 1}`);
+  setOtp((curr) => {
+    const next = [...curr];
+    next[index - 1] = "";
+    return next;
+  });
+  prevInput?.focus();
+}
+   };
 
   // Submit OTP
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,8 +62,8 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ email, onClose }) =
       await verifyEmail({ email, code: enteredOtp });
       setVerified(true);
     } catch (err: any) {
-      setError("❌ Invalid OTP, please try again.");
-    } finally {
+        setError(err?.message || "❌ Invalid OTP, please try again.");
+     } finally {
       setLoading(false);
     }
   };
@@ -71,9 +76,9 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ email, onClose }) =
       setResending(true);
       await sendVerificationCode({ email });
       setMessage("📨 A new OTP has been sent to your email.");
-    } catch (err) {
-      setError("❌ Failed to resend OTP, please try again.");
-    } finally {
+    } catch (err: any) {
+      setError(err?.message || "❌ Failed to resend OTP, please try again.");
+     } finally {
       setResending(false);
     }
   };
@@ -117,6 +122,21 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ email, onClose }) =
                 value={digit}
                 onChange={(e) => handleChange(e.target.value, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
+                onPaste={(e) => {
+                  const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+                  if (text.length) {
+                    e.preventDefault();
+                    const filled = [...otp];
+                    for (let i = 0; i < 6; i++) filled[i] = text[i] ?? "";
+                    setOtp(filled);
+                    const next = document.getElementById(`otp-${Math.min(text.length, 5)}`);
+                    next?.focus();
+                  }
+                }}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete={index === 0 ? "one-time-code" : undefined}
+                autoFocus={index === 0}
                 className="w-10 h-10 border border-[#9E9E9E] text-[#13672B] text-center rounded-md focus:outline-none focus:ring-1 focus:ring-[#26CD56]"
               />
             ))}
