@@ -9,6 +9,7 @@ export default function SideImage() {
                     alt="Side Image"
                     width={250}
                     height={400}
+                    aria-hidden
                 />
             </div>
         </div>

@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import VerifyEmailModal from "./VerifyEmailModal";
 import { signUp, sendVerificationCode } from "@/lib/api/endpoints/auth";
+import { loginWithGoogle } from "@/lib/api/endpoints/auth.client";
 
 interface FormState {
   email: string;
@@ -161,7 +162,7 @@ const SignUp: React.FC = () => {
           </label>
         </div>
 
-        {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+        {error && <p className="text-red-600 text-sm mb-2" role="alert" aria-live="polite">{error}</p>}
 
         <button
           type="submit"
@@ -178,14 +179,15 @@ const SignUp: React.FC = () => {
         <div className="flex-grow border-t border-gray-400"></div>
       </div>
 
-      {/* Social auth buttons */}
-      <div
-        onClick={() => (window.location.href = GOOGLE_URL)}
-        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] cursor-pointer mb-3"
-      >
-        <Image src="/google.png" alt="Google Icon" width={20} height={20} />
-        <p className="ml-2 text-sm font-medium">Sign Up with Google</p>
-      </div>
+      {/* Google Auth */}
+       <button
+       type="button"
+       onClick={() => loginWithGoogle()}
+       className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
+     >
+         <Image src="/google.png" alt="Google Icon" width={20} height={20} />
+         <p className="ml-2 text-sm font-medium">Sign up with Google</p>
+       </button>
 
       <Link href="/auth/signin">
         <p className="text-xs mt-3">

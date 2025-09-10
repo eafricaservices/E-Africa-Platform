@@ -10,7 +10,7 @@ const page = () => {
   return (
     <div className={`w-full flex p-10 gap-20 max-w-7xl mx-auto ${inter.className}`}>
       {/* Side Image */}
-      <div className="w-1/2 hidden md:block">
+      <div className="hidden md:block md:w-1/2">
         <SideImage />
       </div>
 

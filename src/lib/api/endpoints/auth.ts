@@ -1,5 +1,3 @@
-"use client";
-
 import { z } from "zod";
 import { jsonFetch } from "@/lib/api/client";
 import {
@@ -52,12 +50,8 @@ export async function login(input: { email: string; password: string }) {
   return jsonFetch("/api/auth/login", {
     method: "POST",
     body: { email, password },
-    responseSchema: z.any(), 
+    responseSchema: z.any(),
   });
-}
-// google login (redirect-based)
-export async function loginWithGoogle() {
-  window.location.href = "/api/auth/google";
 }
 
 //reset password
@@ -97,6 +91,7 @@ export async function verifyResetCode(input: { email: string; code: string }) {
     responseSchema: z.any(),
   });
 }
+
 //new password
 export async function updateResetPassword(input: {
   email: string;

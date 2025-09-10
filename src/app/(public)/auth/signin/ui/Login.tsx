@@ -1,10 +1,10 @@
-"use client";
 import React, { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { login, loginWithGoogle } from "@/lib/api/endpoints/auth"; 
-
+import { useRouter } from "next/navigation";
+import { login } from "@/lib/api/endpoints/auth";
+import { loginWithGoogle } from "@/lib/api/endpoints/auth.client";
 interface FormState {
   email: string;
   password: string;
@@ -22,6 +22,16 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  // 🔐 Centralized token storage
+  const storeToken = (token: string, remember: boolean) => {
+    if (remember) {
+      localStorage.setItem("authToken", token);
+    } else {
+      sessionStorage.setItem("authToken", token);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -38,10 +48,12 @@ const Login: React.FC = () => {
 
     try {
       const data = await login({ email: form.email, password: form.password });
-      console.log("Login success:", data);
 
       if (data?.token) {
-        localStorage.setItem("authToken", data.token);
+        storeToken(data.token, form.remember);
+        router.push("/dashboard"); // redirect after login
+      } else {
+        setError("Invalid login response. Please try again.");
       }
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -66,7 +78,7 @@ const Login: React.FC = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
+      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2" autoComplete="on">
         {/* Email */}
         <label htmlFor="email" className="text-sm font-medium">
           Email
@@ -78,8 +90,9 @@ const Login: React.FC = () => {
           value={form.email}
           onChange={handleChange}
           placeholder="Enter your email address"
+          autoComplete="email"
           required
-          className="w-full border border-[#212121] rounded-md p-2 mb-3 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+          className="w-full border border-[#212121] rounded-md p-2 mb-3 focus:border-none focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
         />
 
         {/* Password */}
@@ -94,8 +107,10 @@ const Login: React.FC = () => {
             value={form.password}
             onChange={handleChange}
             placeholder="Enter your password"
+            autoComplete="current-password"
             required
-            className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+            className="w-full border border-[#212121] rounded-md p-2 pr-10 focus:border-none focus:outline-none focus:ring-1 focus:ring-[#26CD56] placeholder:text-xs placeholder:text-[#757575] text-sm"
+            aria-label={showPassword ? "Hide password" : "Show password"}
           />
           <button
             type="button"
@@ -125,7 +140,7 @@ const Login: React.FC = () => {
               Remember Me
             </label>
           </div>
-          <Link href="/auth/forget-password">
+          <Link href="/auth/forgot-password">
             <p className="text-[#13672B] underline text-xs cursor-pointer">
               Forgot Password?
             </p>
@@ -133,7 +148,7 @@ const Login: React.FC = () => {
         </div>
 
         {/* Error */}
-        {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+        {error && <p className="text-red-600 text-sm mb-2" role="alert" aria-live="polite">{error}</p>}
 
         {/* Login Button */}
         <button
@@ -153,13 +168,14 @@ const Login: React.FC = () => {
       </div>
 
       {/* Google Auth */}
-      <div
-        onClick={loginWithGoogle}
-        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
-      >
-        <Image src="/google.png" alt="Google Icon" width={20} height={20} />
-        <p className="ml-2 text-sm font-medium">Login with Google</p>
-      </div>
+       <button
+       type="button"
+       onClick={() => loginWithGoogle()}
+       className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
+     >
+         <Image src="/google.png" alt="Google Icon" width={20} height={20} />
+         <p className="ml-2 text-sm font-medium">Login with Google</p>
+       </button>
 
       {/* Signup Link */}
       <Link href="/auth/signup">
