@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface EmailVerifiedModalProps {
     onClose: () => void;
@@ -8,6 +9,11 @@ interface EmailVerifiedModalProps {
 
 const EmailVerifiedModal: React.FC<EmailVerifiedModalProps> = ({ onClose }) => {
     const modalRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
+
+    const handleContinue = () => {
+        router.push("/auth/signin");
+    };
 
     // Close modal when clicking outside
     useEffect(() => {
@@ -37,7 +43,7 @@ const EmailVerifiedModal: React.FC<EmailVerifiedModalProps> = ({ onClose }) => {
                 </p>
 
                 <button
-                    onClick={onClose}
+                    onClick={handleContinue}
                     className="w-1/2 py-2 rounded-md bg-[#13672B] text-white text-sm hover:bg-[#097d2a] cursor-pointer"
                 >
                     Continue

@@ -6,6 +6,7 @@ import Link from "next/link";
 import VerifyEmailModal from "./VerifyEmailModal";
 import { signUp, sendVerificationCode } from "@/lib/api/endpoints/auth";
 import { loginWithGoogle } from "@/lib/api/endpoints/auth.client";
+import { usePasswordValidation } from "@/hooks/usePasswordValidation";
 
 interface FormState {
   email: string;
@@ -32,6 +33,12 @@ const SignUp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
 
+  const {
+    requirements,
+    allMet: passwordValid,
+    missingMessage,
+  } = usePasswordValidation(form.password);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({
@@ -44,8 +51,17 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     setError("");
 
-    if (!form.email.trim() || !form.password.trim() || !form.confirmPassword.trim()) {
+    if (
+      !form.email.trim() ||
+      !form.password.trim() ||
+      !form.confirmPassword.trim()
+    ) {
       setError("All fields are required");
+      return;
+    }
+
+    if (!passwordValid) {
+      setError("Please meet all password requirements");
       return;
     }
 
@@ -89,7 +105,9 @@ const SignUp: React.FC = () => {
 
       <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
         {/* Email */}
-        <label htmlFor="email" className="text-sm font-medium">Email</label>
+        <label htmlFor="email" className="text-sm font-medium">
+          Email
+        </label>
         <input
           type="email"
           id="email"
@@ -102,7 +120,9 @@ const SignUp: React.FC = () => {
         />
 
         {/* Password */}
-        <label htmlFor="password" className="text-sm font-medium">Password</label>
+        <label htmlFor="password" className="text-sm font-medium">
+          Password
+        </label>
         <div className="relative mb-3">
           <input
             type={showPassword ? "text" : "password"}
@@ -123,8 +143,17 @@ const SignUp: React.FC = () => {
           </button>
         </div>
 
+        {/* Password Requirements Message */}
+        {form.password && missingMessage && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-700">{missingMessage}</p>
+          </div>
+        )}
+
         {/* Confirm Password */}
-        <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
+        <label htmlFor="confirmPassword" className="text-sm font-medium">
+          Confirm Password
+        </label>
         <div className="relative mb-3">
           <input
             type={showConfirmPassword ? "text" : "password"}
@@ -157,17 +186,35 @@ const SignUp: React.FC = () => {
           />
           <label htmlFor="terms" className="text-sm cursor-pointer">
             I agree with the{" "}
-            <span className="text-[#13672B] text-xs font-semibold">Terms of services</span> and{" "}
-            <span className="text-[#13672B] text-xs font-semibold">Privacy Policy</span>
+            <span className="text-[#13672B] text-xs font-semibold">
+              Terms of services
+            </span>{" "}
+            and{" "}
+            <span className="text-[#13672B] text-xs font-semibold">
+              Privacy Policy
+            </span>
           </label>
         </div>
 
-        {error && <p className="text-red-600 text-sm mb-2" role="alert" aria-live="polite">{error}</p>}
+        {error && (
+          <p
+            className="text-red-600 text-sm mb-2"
+            role="alert"
+            aria-live="polite"
+          >
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full mt-3 py-2 rounded-md bg-[#13672B] text-white hover:bg-[#097d2a] text-sm disabled:opacity-50"
+          disabled={
+            loading ||
+            !passwordValid ||
+            !form.terms ||
+            form.password !== form.confirmPassword
+          }
+          className="w-full mt-3 py-2 rounded-md bg-[#13672B] text-white hover:bg-[#097d2a] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Signing Up..." : "Sign Up"}
         </button>
@@ -180,14 +227,14 @@ const SignUp: React.FC = () => {
       </div>
 
       {/* Google Auth */}
-       <button
-       type="button"
-       onClick={() => loginWithGoogle()}
-       className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
-     >
-         <Image src="/google.png" alt="Google Icon" width={20} height={20} />
-         <p className="ml-2 text-sm font-medium">Sign up with Google</p>
-       </button>
+      <button
+        type="button"
+        onClick={() => loginWithGoogle()}
+        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
+      >
+        <Image src="/google.png" alt="Google Icon" width={20} height={20} />
+        <p className="ml-2 text-sm font-medium">Sign up with Google</p>
+      </button>
 
       <Link href="/auth/signin">
         <p className="text-xs mt-3">
@@ -197,7 +244,10 @@ const SignUp: React.FC = () => {
       </Link>
 
       {showVerifyModal && (
-        <VerifyEmailModal email={form.email} onClose={() => setShowVerifyModal(false)} />
+        <VerifyEmailModal
+          email={form.email}
+          onClose={() => setShowVerifyModal(false)}
+        />
       )}
     </div>
   );
