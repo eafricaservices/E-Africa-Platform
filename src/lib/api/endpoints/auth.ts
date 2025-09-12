@@ -12,7 +12,7 @@ export async function signUp(input: { email: string; password: string }) {
   const email = EmailSchema.parse(input.email);
   const password = PasswordSchema.parse(input.password);
 
-  return jsonFetch("/api/users", {
+  return jsonFetch("/api/auth/signup", {
     method: "POST",
     body: { email, password },
     responseSchema: BasicResponseSchema.optional(),

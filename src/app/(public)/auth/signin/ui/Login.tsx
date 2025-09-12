@@ -50,7 +50,8 @@ const Login: React.FC = () => {
     try {
       const data = await login({ email: form.email, password: form.password });
 
-      if (data?.token) {
+      if (data?.data?.token) {
+        // Token is nested inside another data object so data?.token did not work
         storeToken(data.token, form.remember);
         router.push("/dashboard"); // redirect after login
       } else {
@@ -79,7 +80,11 @@ const Login: React.FC = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2" autoComplete="on">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full flex flex-col gap-2"
+        autoComplete="on"
+      >
         {/* Email */}
         <label htmlFor="email" className="text-sm font-medium">
           Email
@@ -149,7 +154,15 @@ const Login: React.FC = () => {
         </div>
 
         {/* Error */}
-        {error && <p className="text-red-600 text-sm mb-2" role="alert" aria-live="polite">{error}</p>}
+        {error && (
+          <p
+            className="text-red-600 text-sm mb-2"
+            role="alert"
+            aria-live="polite"
+          >
+            {error}
+          </p>
+        )}
 
         {/* Login Button */}
         <button
@@ -169,14 +182,14 @@ const Login: React.FC = () => {
       </div>
 
       {/* Google Auth */}
-       <button
-       type="button"
-       onClick={() => loginWithGoogle()}
-       className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
-     >
-         <Image src="/google.png" alt="Google Icon" width={20} height={20} />
-         <p className="ml-2 text-sm font-medium">Login with Google</p>
-       </button>
+      <button
+        type="button"
+        onClick={() => loginWithGoogle()}
+        className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
+      >
+        <Image src="/google.png" alt="Google Icon" width={20} height={20} />
+        <p className="ml-2 text-sm font-medium">Login with Google</p>
+      </button>
 
       {/* Signup Link */}
       <Link href="/auth/signup">
