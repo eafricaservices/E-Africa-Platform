@@ -52,7 +52,7 @@ const Login: React.FC = () => {
 
       if (data?.data?.token) {
         // Token is nested inside another data object so data?.token did not work
-        storeToken(data.token, form.remember);
+        storeToken(data.data.token, form.remember);
         router.push("/dashboard"); // redirect after login
       } else {
         setError("Invalid login response. Please try again.");

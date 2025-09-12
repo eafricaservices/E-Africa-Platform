@@ -187,7 +187,7 @@ const SignUp: React.FC = () => {
           <label htmlFor="terms" className="text-sm cursor-pointer">
             I agree with the{" "}
             <span className="text-[#13672B] text-xs font-semibold">
-              Terms of services
+              Terms of Service
             </span>{" "}
             and{" "}
             <span className="text-[#13672B] text-xs font-semibold">
