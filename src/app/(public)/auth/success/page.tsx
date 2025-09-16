@@ -17,8 +17,14 @@ const AuthSuccessPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Hydrate persisted token on mount
+    const persistedToken = localStorage.getItem("auth_token");
+    if (persistedToken) {
+      setToken(persistedToken);
+      return; // Bail early if token is already set
+    }
+
     const urlToken = searchParams.get("token");
-    
     if (!urlToken) {
       setError("No authentication token found. Please try signing in again.");
       return;
@@ -32,13 +38,13 @@ const AuthSuccessPage = () => {
     }
 
     try {
-      // Store token in localStorage
       localStorage.setItem("auth_token", urlToken);
       setToken(urlToken);
+      router.replace("/auth/success", { scroll: false });
     } catch (err) {
       setError("Failed to save authentication. Please try again.");
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const handleContinueToDashboard = () => {
     setLoading(true);
