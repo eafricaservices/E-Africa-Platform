@@ -18,7 +18,7 @@ const AuthSuccessPage = () => {
 
   useEffect(() => {
     const urlToken = searchParams.get("token");
-    
+
     if (!urlToken) {
       setError("No authentication token found. Please try signing in again.");
       return;
@@ -27,7 +27,9 @@ const AuthSuccessPage = () => {
     // Basic JWT format validation (3 parts separated by dots)
     const tokenParts = urlToken.split(".");
     if (tokenParts.length !== 3) {
-      setError("Invalid authentication token format. Please try signing in again.");
+      setError(
+        "Invalid authentication token format. Please try signing in again."
+      );
       return;
     }
 
@@ -50,7 +52,9 @@ const AuthSuccessPage = () => {
   };
 
   return (
-    <div className={`w-full flex p-10 gap-20 max-w-7xl mx-auto ${inter.className}`}>
+    <div
+      className={`w-full flex p-10 gap-20 max-w-7xl mx-auto ${inter.className}`}
+    >
       {/* Side Image */}
       <div className="hidden md:block md:w-1/2">
         <SideImage />
@@ -76,13 +80,14 @@ const AuthSuccessPage = () => {
               <div className="flex justify-center mb-6">
                 <CheckCircle className="w-16 h-16 text-green-500" />
               </div>
-              
+
               <h1 className="text-2xl font-semibold text-black mb-4">
                 Authentication Successful!
               </h1>
-              
+
               <p className="text-gray-600 mb-8">
-                You have been successfully signed in. Click below to continue to your dashboard.
+                You have been successfully signed in. Click below to continue to
+                your dashboard.
               </p>
 
               <button
@@ -101,14 +106,12 @@ const AuthSuccessPage = () => {
               <div className="flex justify-center mb-6">
                 <AlertCircle className="w-16 h-16 text-red-500" />
               </div>
-              
+
               <h1 className="text-2xl font-semibold text-black mb-4">
                 Authentication Error
               </h1>
-              
-              <p className="text-red-600 mb-8">
-                {error}
-              </p>
+
+              <p className="text-red-600 mb-8">{error}</p>
 
               <button
                 onClick={handleBackToSignIn}
@@ -125,11 +128,11 @@ const AuthSuccessPage = () => {
               <div className="flex justify-center mb-6">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#13672B]"></div>
               </div>
-              
+
               <h1 className="text-2xl font-semibold text-black mb-4">
                 Processing Authentication...
               </h1>
-              
+
               <p className="text-gray-600">
                 Please wait while we complete your sign in.
               </p>
