@@ -21,7 +21,7 @@ export default function OnboardingPage() {
 
   const handleContinue = () => {
     if (selectedRole) {
-      router.push(`/onboarding/${selectedRole}`);
+      router.push(`onboarding/${selectedRole}`);
     }
   };
 
