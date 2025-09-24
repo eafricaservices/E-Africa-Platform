@@ -21,7 +21,7 @@ export default function OnboardingPage() {
 
   const handleContinue = () => {
     if (selectedRole) {
-      router.push(`/onboarding/${selectedRole}`);
+      router.push(`/auth/onboarding/${selectedRole}`);
     }
   };
 
@@ -202,7 +202,7 @@ export default function OnboardingPage() {
           <button
             onClick={handleContinue}
             disabled={!selectedRole}
-            className="bg-[#13672B] text-white px-10 py-3 rounded-sm font-semibold text-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="bg-[#13672B] text-white px-10 py-3 rounded-sm font-semibold text-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg cursor-pointer"
           >
             Continue
           </button>
