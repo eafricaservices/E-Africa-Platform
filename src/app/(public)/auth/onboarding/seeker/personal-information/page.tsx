@@ -1,17 +1,11 @@
 "use client";
-import { ArrowLeft, ChevronDown, Menu } from "lucide-react";
-import Image from "next/image";
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
-import Stepper from "../ui/ProgressBar";
+import { Header, Stepper } from "../ui";
+import { Inter } from "next/font/google";
 
-const steps = [
-  { number: 1, title: "Personal Information", href: "/auth/onboarding/seeker/personal-information" },
-  { number: 2, title: "Career Goals", href: "/auth/onboarding/seeker/career-goals" },
-  { number: 3, title: "Skills & Expertise", href: "/auth/onboarding/seeker/skills" },
-  { number: 4, title: "Experience", href: "/auth/onboarding/seeker/experience" },
-  { number: 5, title: "Final Details", href: "/auth/onboarding/seeker/final" },
-];
+const inter = Inter({ subsets: ["latin"] });
 
 export default function PersonalInformationPage() {
   const [formData, setFormData] = useState({
@@ -46,27 +40,13 @@ export default function PersonalInformationPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className={`p-8 ${inter.className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between text-[#13672B]">
-        <Link href="/auth/onboarding">
-          <ArrowLeft />
-        </Link>
-        <Image src="/logo.png" alt="Logo" width={100} height={100} />
-        <Menu />
-      </div>
-
-      {/* Top section */}
-      <div className="flex flex-col items-center bg-[#13672B] text-white p-8 rounded-lg mt-8">
-        <h1 className="text-2xl font-medium">Create your profile</h1>
-        <p className="text-sm font-light mt-3">
-          Help us understand your career goals and connect you with the right opportunities
-        </p>
-      </div>
+      <Header />
 
       <div className="p-6 bg-white">
         {/* Stepper */}
-        <Stepper steps={steps} />
+        <Stepper />
 
         {/* Personal Information Form */}
         <form className="space-y-6 p-6 bg-[#F7F9F9]">
