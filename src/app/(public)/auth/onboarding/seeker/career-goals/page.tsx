@@ -22,29 +22,29 @@ export default function CareerGoalsPage() {
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const careerPathOptions = [
-    "Product Design", 
-    "Software Development", 
-    "Data Science & Analytics", 
+    "Product Design",
+    "Software Development",
+    "Data Science & Analytics",
     "Digital Marketing"
   ];
   const careerGoalOptions = [
-    "Find Remote Job", 
-    "Get Internship", 
-    "Career Transition", 
-    "Skill Development", 
+    "Find Remote Job",
+    "Get Internship",
+    "Career Transition",
+    "Skill Development",
     "Networking with Experts"
   ];
   const timelineOptions = [
-    "0-3 months", 
-    "3-6 months", 
-    "6-12 months", 
+    "0-3 months",
+    "3-6 months",
+    "6-12 months",
     "1-2 years"
   ];
   const industryOptions = [
-    "Education", 
-    "Tech", 
-    "Health", 
-    "Finance", 
+    "Education",
+    "Tech",
+    "Health",
+    "Finance",
     "Marketing"
   ];
 
