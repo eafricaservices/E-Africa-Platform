@@ -25,6 +25,8 @@ const Footer = () => {
   const prevStep = currentIndex > 0 ? steps[currentIndex - 1] : null;
   const nextStep = currentIndex < steps.length - 1 ? steps[currentIndex + 1] : null;
 
+  const isLastStep = currentIndex === steps.length - 1;
+
   return (
     <div className="flex justify-between items-center mt-8">
       {/* Back Button */}
@@ -39,19 +41,28 @@ const Footer = () => {
           </button>
         </Link>
       ) : (
-        <div /> 
+        <div />
       )}
 
-      {/* Continue Button */}
-      {nextStep && (
-        <Link href={nextStep.href}>
-          <button
-            type="button"
-            className="px-8 py-2 bg-[#13672B] text-sm text-white font-medium rounded-lg hover:bg-green-700 transition-colors outline-none shadow-sm cursor-pointer"
-          >
-            Continue
-          </button>
-        </Link>
+      {/* Continue / Complete Button */}
+      {isLastStep ? (
+        <button
+          type="submit"
+          className="px-8 py-2 bg-[#13672B] text-sm text-white font-medium rounded-lg hover:bg-green-700 transition-colors outline-none shadow-sm cursor-pointer"
+        >
+          Complete
+        </button>
+      ) : (
+        nextStep && (
+          <Link href={nextStep.href}>
+            <button
+              type="button"
+              className="px-8 py-2 bg-[#13672B] text-sm text-white font-medium rounded-lg hover:bg-green-700 transition-colors outline-none shadow-sm cursor-pointer"
+            >
+              Continue
+            </button>
+          </Link>
+        )
       )}
     </div>
   );

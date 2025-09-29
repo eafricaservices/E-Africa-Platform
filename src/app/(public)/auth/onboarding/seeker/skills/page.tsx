@@ -184,7 +184,7 @@ export default function ProfilePage() {
                                     onChange={handleFileUpload}
                                 />
 
-                                {/* Upload area (clickable icon + info) */}
+                                {/* Upload area */}
                                 <div className="flex flex-col items-center">
                                     <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mb-3">
                                         <Upload className="text-yellow-600" size={32} />
@@ -223,14 +223,14 @@ export default function ProfilePage() {
                                     {/* Choose button */}
                                     <button
                                         type="button"
-                                        className="bg-green-800 text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-green-900 transition-colors cursor-pointer"
+                                        className="bg-[#13672B] text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-green-900 transition-colors cursor-pointer"
                                         onClick={() => fileInputRef.current?.click()}
                                     >
-                                        Choose files
+                                        Choose file(s)
                                     </button>
 
                                     <p className="text-xs text-gray-400 mt-2">
-                                        Max 10MB per file. Jpeg, PDF supported
+                                        Max 10MB per file. JPG, PDF supported
                                     </p>
                                 </div>
                             </div>
