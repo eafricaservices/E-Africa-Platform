@@ -2,7 +2,7 @@
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
-import { Header, Stepper } from "../ui";
+import { Footer, Header, Stepper } from "../ui";
 import { Inter } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -159,17 +159,7 @@ export default function PersonalInformationPage() {
             </div>
           </div>
 
-          {/* Continue Button */}
-          <div className="flex justify-end mt-8">
-            <Link href="/auth/onboarding/seeker/career-goals">
-              <button
-                onClick={handleContinue}
-                className="px-8 py-3 bg-[#13672B] text-white font-medium rounded-lg hover:bg-green-700 transition-colors focus:ring-2 outline-none cursor-pointer"
-              >
-                Continue
-              </button>
-            </Link>
-          </div>
+          <Footer />
         </form>
       </div>
     </div>

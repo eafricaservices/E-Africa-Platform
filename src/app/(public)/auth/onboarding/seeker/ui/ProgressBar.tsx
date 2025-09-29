@@ -17,7 +17,7 @@ const Stepper: React.FC = () => {
     { number: 1, title: "Personal Information", href: "/auth/onboarding/seeker/personal-information" },
     { number: 2, title: "Career Goals", href: "/auth/onboarding/seeker/career-goals" },
     { number: 3, title: "Skills & Expertise", href: "/auth/onboarding/seeker/skills" },
-    { number: 4, title: "Final Details", href: "/auth/onboarding/seeker/final" },
+    { number: 4, title: "Final Details", href: "/auth/onboarding/seeker/final-details" },
   ];
 
   const currentStepIndex = steps.findIndex((step) => step.href === pathname);

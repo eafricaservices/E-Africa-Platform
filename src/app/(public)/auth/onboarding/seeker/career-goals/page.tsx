@@ -1,8 +1,6 @@
 "use client";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Header, Stepper } from "../ui";
+import { Footer, Header, Stepper } from "../ui";
 import { Inter } from "next/font/google";
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
 
@@ -181,23 +179,7 @@ export default function CareerGoalsPage() {
               }}
             />
 
-            <div className="flex justify-between items-center mt-8">
-              <Link href="/auth/onboarding/seeker/personal-information">
-                <button type="button" className="text-[#13672B] font-medium">
-                  <ArrowLeft className="inline w-5 h-5 mr-1" />
-                  Back
-                </button>
-              </Link>
-
-              <Link href="/auth/onboarding/seeker/skills">
-                <button
-                  type="button"
-                  className="px-8 py-2 bg-[#13672B] text-sm text-white font-medium rounded-lg hover:bg-green-700 transition-colors focus:ring-2 focus:ring-green-500 outline-none shadow-sm cursor-pointer"
-                >
-                  Continue
-                </button>
-              </Link>
-            </div>
+            <Footer />
           </div>
         </div>
       </div>
