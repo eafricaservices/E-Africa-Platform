@@ -20,8 +20,10 @@ export default function OnboardingPage() {
   };
 
   const handleContinue = () => {
-    if (selectedRole) {
+    if (selectedRole == "provider") {
       router.push(`/auth/onboarding/${selectedRole}`);
+    } else if (selectedRole == "seeker") {
+      router.push(`/auth/onboarding/${selectedRole}/personal-information`);
     }
   };
 
