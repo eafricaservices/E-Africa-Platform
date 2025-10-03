@@ -20,7 +20,7 @@ export default function ProviderOnboardingPage() {
     router.back();
   }
   return (
-    <div className={"min-h-screen px-8 pb-10 " + poppins.className}>
+    <div className={"min-h-screen px-0 sm:px-8 pb-10 " + poppins.className}>
       {/* Static Navigation - Always Visible */}
       <nav
         className={
@@ -42,7 +42,7 @@ export default function ProviderOnboardingPage() {
       </nav>
 
       {/* Dynamic Forms Container */}
-      <div className="forms-container p-8 bg-[#F7F9F9]">
+      <div className="forms-container p-4 sm:p-8 bg-[#F7F9F9]">
         <Flow /> {/* This handles the swapping */}
       </div>
     </div>

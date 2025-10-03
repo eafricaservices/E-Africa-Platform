@@ -20,7 +20,8 @@ export default function UploadProfilePhoto({
     "image/jpeg",
     "image/jpg",
     "image/png",
-    "application/pdf",
+    "image/webp",
+    "image/gif",
   ];
   const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
 
@@ -94,6 +95,16 @@ export default function UploadProfilePhoto({
     fileInputRef.current?.click();
   };
 
+  const handleRemoveFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFile(null);
+    setError("");
+    setUploadProgress(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Upload Profile Photo */}
@@ -156,6 +167,12 @@ export default function UploadProfilePhoto({
               <p className="text-sm text-gray-600">
                 {(file.size / (1024 * 1024)).toFixed(2)} MB
               </p>
+              <button
+                onClick={handleRemoveFile}
+                className="mt-2 px-4 py-2 text-sm text-red-600 border-1 border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                Remove
+              </button>
             </div>
           ) : (
             <div className="space-y-2">

@@ -14,15 +14,20 @@ export default function VideoRecordingModal({
   onVideoReady,
 }: VideoRecordingModalProps) {
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [showTimeAlert, setShowTimeAlert] = useState<string>("");
   const [currentCamera, setCurrentCamera] = useState<"user" | "environment">(
     "user"
   );
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [hasFlash, setHasFlash] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string>("");
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoError, setVideoError] = useState<string>("");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewVideoRef = useRef<HTMLVideoElement>(null);
@@ -93,7 +98,20 @@ export default function VideoRecordingModal({
     if (!streamRef.current) return;
 
     chunksRef.current = [];
-    const mediaRecorder = new MediaRecorder(streamRef.current);
+
+    // Try different MIME types for better compatibility
+    let options: MediaRecorderOptions = { mimeType: "video/webm;codecs=vp9" };
+    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
+      options = { mimeType: "video/webm;codecs=vp8" };
+    }
+    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
+      options = { mimeType: "video/webm" };
+    }
+    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
+      options = { mimeType: "video/mp4" };
+    }
+
+    const mediaRecorder = new MediaRecorder(streamRef.current, options);
     mediaRecorderRef.current = mediaRecorder;
 
     mediaRecorder.ondataavailable = (e) => {
@@ -103,21 +121,46 @@ export default function VideoRecordingModal({
     };
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      const mimeType = options.mimeType || "video/webm";
+      const blob = new Blob(chunksRef.current, { type: mimeType });
       setRecordedBlob(blob);
+      // Create URL for preview and stop the live stream
+      const videoUrl = URL.createObjectURL(blob);
+      setPreviewVideoUrl(videoUrl);
+      setVideoLoaded(false);
+      setVideoError("");
+      // Stop the live camera stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
     };
 
     mediaRecorder.start();
     setIsRecording(true);
+    setIsPaused(false);
     setRecordingTime(0);
+    setShowTimeAlert("");
 
     intervalRef.current = setInterval(() => {
       setRecordingTime((prev) => {
-        if (prev >= 60) {
+        const newTime = prev + 1;
+
+        // Show time alerts
+        if (newTime === 30) {
+          setShowTimeAlert("30 seconds left");
+          setTimeout(() => setShowTimeAlert(""), 2000);
+        } else if (newTime === 50) {
+          setShowTimeAlert("10 seconds left");
+          setTimeout(() => setShowTimeAlert(""), 2000);
+        }
+
+        // Auto-stop at 60 seconds
+        if (newTime >= 60) {
           stopRecording();
           return 60;
         }
-        return prev + 1;
+        return newTime;
       });
     }, 1000);
   };
@@ -126,9 +169,60 @@ export default function VideoRecordingModal({
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setIsPaused(false);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
+    }
+  };
+
+  const pauseRecording = () => {
+    if (mediaRecorderRef.current && isRecording && !isPaused) {
+      mediaRecorderRef.current.pause();
+      setIsPaused(true);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+  };
+
+  const resumeRecording = () => {
+    if (mediaRecorderRef.current && isRecording && isPaused) {
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
+
+      // Resume the timer
+      intervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => {
+          const newTime = prev + 1;
+
+          // Show time alerts
+          if (newTime === 30) {
+            setShowTimeAlert("30 seconds left");
+            setTimeout(() => setShowTimeAlert(""), 2000);
+          } else if (newTime === 50) {
+            setShowTimeAlert("10 seconds left");
+            setTimeout(() => setShowTimeAlert(""), 2000);
+          }
+
+          // Auto-stop at 60 seconds
+          if (newTime >= 60) {
+            stopRecording();
+            return 60;
+          }
+          return newTime;
+        });
+      }, 1000);
+    }
+  };
+
+  const toggleRecording = () => {
+    if (!isRecording) {
+      startRecording();
+    } else if (isPaused) {
+      resumeRecording();
+    } else {
+      pauseRecording();
     }
   };
 
@@ -140,28 +234,45 @@ export default function VideoRecordingModal({
   };
 
   const retakeVideo = () => {
+    // Clean up previous video URL
+    if (previewVideoUrl) {
+      URL.revokeObjectURL(previewVideoUrl);
+      setPreviewVideoUrl("");
+    }
     setRecordedBlob(null);
     setRecordingTime(0);
-    setIsPlaying(true);
+    setIsPlaying(false);
+    setVideoLoaded(false);
+    setVideoError("");
+    setIsPaused(false);
+    setShowTimeAlert("");
+    // Restart the camera
+    initializeCamera();
   };
 
   const togglePlayPause = () => {
-    if (previewVideoRef.current) {
+    if (previewVideoRef.current && videoLoaded) {
       if (isPlaying) {
         previewVideoRef.current.pause();
+        setIsPlaying(false);
       } else {
-        previewVideoRef.current.play();
+        previewVideoRef.current.play().catch((error) => {
+          setVideoError("Failed to play video");
+        });
+        setIsPlaying(true);
       }
-      setIsPlaying(!isPlaying);
     }
   };
-
   const cleanup = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
+    }
+    // Clean up video URL
+    if (previewVideoUrl) {
+      URL.revokeObjectURL(previewVideoUrl);
     }
   };
 
@@ -185,16 +296,40 @@ export default function VideoRecordingModal({
         {/* Video stream or preview */}
         <div className="relative h-full w-full">
           {recordedBlob ? (
-            <video
-              ref={previewVideoRef}
-              src={URL.createObjectURL(recordedBlob)}
-              className="w-full h-full object-cover"
-              controls={false}
-              autoPlay
-              loop
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            />
+            <>
+              <video
+                ref={previewVideoRef}
+                src={previewVideoUrl}
+                className="w-full h-full object-cover"
+                controls={false}
+                autoPlay={false}
+                loop={false}
+                playsInline
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+                onLoadedData={() => {
+                  setVideoLoaded(true);
+                  setVideoError("");
+                }}
+                onError={(e) => {
+                  setVideoError("Failed to load video");
+                }}
+                onLoadStart={() => {
+                  setVideoLoaded(false);
+                }}
+              />
+              {!videoLoaded && !videoError && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <div className="text-white text-lg">Loading video...</div>
+                </div>
+              )}
+              {videoError && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <div className="text-red-500 text-lg">{videoError}</div>
+                </div>
+              )}
+            </>
           ) : (
             <video
               ref={videoRef}
@@ -209,6 +344,13 @@ export default function VideoRecordingModal({
           {errorMessage && (
             <div className="absolute top-20 left-4 right-4 bg-red-500 text-white p-3 rounded-lg text-sm">
               {errorMessage}
+            </div>
+          )}
+
+          {/* Time alert popup */}
+          {showTimeAlert && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-6 py-3 rounded-lg text-lg font-medium z-10">
+              {showTimeAlert}
             </div>
           )}
 
@@ -234,10 +376,16 @@ export default function VideoRecordingModal({
             </button>
 
             {!recordedBlob && (
-              <div className="bg-black/50 px-3 py-1 rounded-full">
+              <div className="bg-black/50 px-3 py-1 rounded-full flex items-center gap-2">
+                {isPaused && (
+                  <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                )}
                 <span className="text-white font-mono text-lg">
                   {formatTime(recordingTime)}
                 </span>
+                {isPaused && (
+                  <span className="text-yellow-400 text-sm">PAUSED</span>
+                )}
               </div>
             )}
 
@@ -360,7 +508,34 @@ export default function VideoRecordingModal({
                 </div>
               </>
             ) : (
-              <div className="flex justify-center">
+              <div className="flex justify-center items-center gap-4">
+                {/* Pause/Resume button (only show when recording) */}
+                {isRecording && (
+                  <button
+                    onClick={isPaused ? resumeRecording : pauseRecording}
+                    className="w-12 h-12 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                  >
+                    {isPaused ? (
+                      <svg
+                        className="w-6 h-6 ml-1"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-6 h-6"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+
+                {/* Main record/stop button */}
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
                   className="relative w-20 h-20"
@@ -386,11 +561,12 @@ export default function VideoRecordingModal({
                           cx="50"
                           cy="50"
                           r="45"
-                          stroke="red"
+                          stroke={isPaused ? "yellow" : "red"}
                           strokeWidth="3"
                           fill="transparent"
                           strokeDasharray={`${(recordingTime / 60) * 283} 283`}
                           className="transition-all duration-1000"
+                          opacity={isPaused ? 0.7 : 1}
                         />
                       )}
                     </svg>
@@ -402,11 +578,11 @@ export default function VideoRecordingModal({
                       isRecording ? "bg-red-500" : "bg-transparent"
                     }`}
                   >
-                    <div
-                      className={`w-full h-full rounded-full transition-all ${
-                        isRecording ? "bg-white" : "bg-red-500"
-                      }`}
-                    />
+                    {isRecording ? (
+                      <div className="w-6 h-6 bg-white rounded-sm" />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-red-500" />
+                    )}
                   </div>
                 </button>
               </div>

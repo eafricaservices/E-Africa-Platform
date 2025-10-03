@@ -72,7 +72,7 @@ export default function AvailabilityStep({
           <h3 className="text-gray-900 font-medium text-lg mb-4">
             Weekly Availability*
           </h3>
-          <div className="flex justify-between gap-2">
+          <div className="flex justify-items-start gap-2 flex-wrap">
             {daysOfWeek.map((day) => (
               <DayButton
                 key={day}
@@ -89,7 +89,7 @@ export default function AvailabilityStep({
           <h3 className="text-gray-900 font-medium text-lg mb-4">
             Time Slots*
           </h3>
-          <div className="flex justify-between gap-2">
+          <div className="flex justify-items-start gap-2 flex-wrap">
             {timeSlots.map((timeSlot) => (
               <TimeSlotButton
                 key={timeSlot}
@@ -111,11 +111,11 @@ export default function AvailabilityStep({
         </div>
 
         {/* TEMPORARY NAVIGATION */}
-        <div className="flex justify-between items-center pt-8">
+        <div className="flex justify-between items-center pt-8 gap-2 flex-col md:flex-row">
           <button
             type="button"
             onClick={onPrevious}
-            className="px-8 py-3 border-1 border-[#13672B] text-[#13672B] rounded-lg font-medium hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2"
+            className="px-8 py-3 border-1 border-[#13672B] text-[#13672B] rounded-lg font-medium hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2 w-full md:w-auto text-center"
           >
             Go back
           </button>
@@ -123,7 +123,7 @@ export default function AvailabilityStep({
           <button
             type="button"
             onClick={onNext}
-            className="px-8 py-3 bg-[#13672B] text-white rounded-lg font-medium hover:bg-green-800 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2"
+            className="px-8 py-3 bg-[#13672B] text-white rounded-lg font-medium hover:bg-green-800 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2 w-full md:w-auto text-center"
           >
             Save and Continue
           </button>

@@ -45,9 +45,9 @@ export default function ProfileForm() {
           Years of Experience*
         </label>
         <input
-          type="text"
+          type="number"
           placeholder="How long have you worked in this field?"
-          className="w-full px-4 py-3 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-gray-900 placeholder-gray-500"
+          className="appearance-none w-full px-4 py-3 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-gray-900 placeholder-gray-500"
         />
       </div>
 

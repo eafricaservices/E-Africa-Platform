@@ -91,6 +91,16 @@ export default function UploadResume({ onFileUpload }: UploadResumeProps) {
     fileInputRef.current?.click();
   };
 
+  const handleRemoveFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFile(null);
+    setError("");
+    setUploadProgress(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div
       className={`relative border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-200 ${
@@ -146,6 +156,12 @@ export default function UploadResume({ onFileUpload }: UploadResumeProps) {
           <p className="text-sm text-gray-600">
             {(file.size / (1024 * 1024)).toFixed(2)} MB
           </p>
+          <button
+            onClick={handleRemoveFile}
+            className="mt-2 px-4 py-2 text-sm text-red-600 border-1 border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            Remove
+          </button>
         </div>
       ) : (
         <div className="space-y-4">

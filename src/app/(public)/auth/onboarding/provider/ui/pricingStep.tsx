@@ -48,6 +48,7 @@ export default function PricingStep({ onNext, onPrevious }: NavigationProps) {
             value={discoveryPrice}
             onChange={setDiscoveryPrice}
             label="Free session"
+            disabled={true}
           />
           <PricingCard
             title="Deep Dive"
@@ -83,11 +84,11 @@ export default function PricingStep({ onNext, onPrevious }: NavigationProps) {
         </div>
 
         {/* TEMPORARY NAVIGATION - Remove when API validation is ready */}
-        <div className="flex justify-between items-center pt-8">
+        <div className="flex justify-between items-center pt-8 gap-2 flex-col md:flex-row">
           <button
             type="button"
             onClick={onPrevious}
-            className="px-8 py-3 border-2 border-[#13672B] text-[#13672B] rounded-lg font-medium hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2"
+            className="px-8 py-3 border-2 border-[#13672B] text-[#13672B] rounded-lg font-medium hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2 w-full md:w-auto text-center"
           >
             Go back
           </button>
@@ -95,7 +96,7 @@ export default function PricingStep({ onNext, onPrevious }: NavigationProps) {
           <button
             type="button"
             onClick={onNext}
-            className="px-8 py-3 bg-[#13672B] text-white rounded-lg font-medium hover:bg-green-800 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2"
+            className="px-8 py-3 bg-[#13672B] text-white rounded-lg font-medium hover:bg-green-800 transition-colors focus:outline-none focus:ring-2 focus:ring-[#13672B] focus:ring-offset-2 w-full md:w-auto text-center"
           >
             Save and Continue
           </button>

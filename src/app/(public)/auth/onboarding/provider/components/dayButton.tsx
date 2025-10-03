@@ -17,7 +17,7 @@ export default function dayButton({
     <button
       type="button"
       onClick={onToggle}
-      className={`flex-1 py-3 rounded-lg font-medium transition-all cursor-pointer hover:scale-[1.02] ${
+      className={`flex-1 py-3 rounded-lg font-medium transition-all cursor-pointer hover:scale-[1.02] min-w-[75px] max-w-[83px] ${
         isSelected
           ? "bg-[#13672B] text-white border-1 border-[#13672B]"
           : "bg-white text-gray-700 border-1 border-gray-300 hover:border-[#13672B] hover:text-[#13672B]"
