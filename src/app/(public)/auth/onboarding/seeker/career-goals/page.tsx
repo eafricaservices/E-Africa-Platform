@@ -103,6 +103,9 @@ export default function CareerGoalsPage() {
               handleMultiSelectChange={handleMultiSelectChange}
               handleRemoveItem={handleRemoveItem}
               setFormData={setFormData}
+              allowCustom
+              customValue={customValue}
+              setCustomValue={setCustomValue}
               dropdownRef={(el) => {
                 dropdownRefs.current.preferredCareerPath = el;
               }}

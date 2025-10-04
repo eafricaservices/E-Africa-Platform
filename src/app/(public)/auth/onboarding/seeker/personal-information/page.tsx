@@ -1,9 +1,8 @@
 "use client";
-import { ChevronDown } from "lucide-react";
-import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Footer, Header, Stepper } from "../ui";
 import { Inter } from "next/font/google";
+import { MultiSelectDropdown } from "../components";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,13 +12,12 @@ export default function PersonalInformationPage() {
     city: "",
     state: "",
     country: "",
-    yearsOfExperience: "0",
-    careerStage: "",
+    careerStage: [] as string[],
     bio: "",
   });
-
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const careerStageOptions = [
-    "Select your career stage",
     "Student/Recent Graduate",
     "Entry Level (0-2 years)",
     "Mid-Level (3-5 years)",
@@ -35,9 +33,41 @@ export default function PersonalInformationPage() {
     }));
   };
 
-  const handleContinue = () => {
-    console.log("Form data:", formData);
-  };
+  const handleMultiSelectChange = useCallback(
+    (field: FormField, value: string) => {
+      setFormData((prev) => {
+        if (Array.isArray(prev[field]) && prev[field].includes(value)) {
+          return {
+            ...prev,
+            [field]: (prev[field] as string[]).filter((item) => item !== value),
+          };
+        } else if (Array.isArray(prev[field])) {
+          return { ...prev, [field]: [...(prev[field] as string[]), value] };
+        }
+        return prev;
+      });
+    },
+    []
+  );
+
+  const handleRemoveItem = useCallback((field: FormField, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: (prev[field] as string[]).filter((item) => item !== value),
+    }));
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const isOutside = Object.values(dropdownRefs.current).every(
+        (ref) => ref && !ref.contains(event.target as Node)
+      );
+      if (isOutside) setOpenDropdown(null);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className={`p-8 ${inter.className}`}>
@@ -60,7 +90,7 @@ export default function PersonalInformationPage() {
               placeholder="Enter your full name"
               value={formData.fullName}
               onChange={(e) => handleInputChange("fullName", e.target.value)}
-              className="w-full px-4 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors"
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
             />
           </div>
 
@@ -74,7 +104,7 @@ export default function PersonalInformationPage() {
               placeholder="e.g., Ikeja"
               value={formData.city}
               onChange={(e) => handleInputChange("city", e.target.value)}
-              className="w-full px-4 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors"
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
             />
           </div>
 
@@ -88,7 +118,7 @@ export default function PersonalInformationPage() {
               placeholder="e.g., Lagos"
               value={formData.state}
               onChange={(e) => handleInputChange("state", e.target.value)}
-              className="w-full px-4 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors"
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
             />
           </div>
 
@@ -102,43 +132,27 @@ export default function PersonalInformationPage() {
               placeholder="e.g., Nigeria"
               value={formData.country}
               onChange={(e) => handleInputChange("country", e.target.value)}
-              className="w-full px-4 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors"
-            />
-          </div>
-
-          {/* Years of Experience */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Years of experience
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={formData.yearsOfExperience}
-              onChange={(e) => handleInputChange("yearsOfExperience", e.target.value)}
-              className="w-full px-4 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors"
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
             />
           </div>
 
           {/* Career Stage */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Career Stage*
-            </label>
-            <div className="relative">
-              <select
-                value={formData.careerStage}
-                onChange={(e) => handleInputChange("careerStage", e.target.value)}
-                className="w-full px-4 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors appearance-none bg-white"
-              >
-                {careerStageOptions.map((option, index) => (
-                  <option key={index} value={index === 0 ? "" : option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-            </div>
+            <MultiSelectDropdown
+              label="Career Stage*"
+              field="careerStage"
+              options={careerStageOptions}
+              placeholder="Select your career stage"
+              formData={formData}
+              openDropdown={openDropdown}
+              setOpenDropdown={setOpenDropdown}
+              handleMultiSelectChange={handleMultiSelectChange}
+              handleRemoveItem={handleRemoveItem}
+              setFormData={setFormData}
+              dropdownRef={(el) => {
+                dropdownRefs.current.careerStage = el;
+              }}
+            />
           </div>
 
           {/* Bio */}
@@ -152,7 +166,7 @@ export default function PersonalInformationPage() {
               onChange={(e) => handleInputChange("bio", e.target.value)}
               rows={4}
               maxLength={500}
-              className="w-full px-4 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors resize-none"
+              className="w-full px-3 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm resize-none"
             />
             <div className="text-right text-sm text-gray-500 mt-1">
               {formData.bio.length} / 500
@@ -165,3 +179,5 @@ export default function PersonalInformationPage() {
     </div>
   );
 }
+// Removed custom useRef implementation; using React's useRef instead.
+

@@ -9,13 +9,13 @@ import { Check, CheckCircle } from "lucide-react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-type Role = "seeker" | "provider" | null;
+type Role = "seeker/personal-information" | "provider" | null;
 
 export default function OnboardingPage() {
   const [selectedRole, setSelectedRole] = useState<Role>(null);
   const router = useRouter();
 
-  const handleRoleSelect = (role: "seeker" | "provider") => {
+  const handleRoleSelect = (role: "seeker/personal-information" | "provider") => {
     setSelectedRole(role);
   };
 
@@ -55,9 +55,9 @@ export default function OnboardingPage() {
           <div className="grid md:grid-cols-2 gap-8">
             {/* Service Seeker Card */}
             <div
-              onClick={() => handleRoleSelect("seeker")}
+              onClick={() => handleRoleSelect("seeker/personal-information")}
               className={`relative bg-white rounded-2xl p-8 border-2 cursor-pointer transition-all duration-300 hover:shadow-md ${
-                selectedRole === "seeker"
+                selectedRole === "seeker/personal-information"
                   ? "border-[#13672B] bg-green-50"
                   : "border-gray-200"
               }`}
@@ -65,7 +65,7 @@ export default function OnboardingPage() {
               <div className="text-center mb-6">
                 {/* Selection Indicator - at top center above title */}
                 <div className="flex justify-center mb-4">
-                  {selectedRole === "seeker" ? (
+                  {selectedRole === "seeker/personal-information" ? (
                     <div className="w-6 h-6 bg-[#13672B] rounded-full flex items-center justify-center">
                       <Check className="w-4 h-4 text-white" />
                     </div>
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
               {/* Feature List */}
               <div
                 className={`transition-opacity duration-300 ${
-                  selectedRole === "seeker" ? "opacity-100" : "opacity-0"
+                  selectedRole === "seeker/personal-information" ? "opacity-100" : "opacity-0"
                 }`}
               >
                 <ul className="space-y-3 text-gray-600">

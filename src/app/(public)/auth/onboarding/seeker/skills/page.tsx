@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export type ProfileFormData = {
     coreSkills: string[];
-    skillLevel: string[];
+    skillLevel: string;
     tools: string[];
     yearsExperience: string;
     certifications: File[] | null;
@@ -20,7 +20,7 @@ type ProfileFormField = keyof ProfileFormData;
 export default function ProfilePage() {
     const [formData, setFormData] = useState<ProfileFormData>({
         coreSkills: [],
-        skillLevel: [],
+        skillLevel: "",
         tools: [],
         yearsExperience: "",
         certifications: null,
@@ -29,6 +29,7 @@ export default function ProfilePage() {
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const [customValue, setCustomValue] = useState("");
     const [customTools, setCustomTools] = useState("");
+    const [customSkills, setCustomSkills] = useState("");
     const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -38,30 +39,27 @@ export default function ProfilePage() {
     const toolsOptions = ["Figma", "Adobe XD", "VS Code", "Jira", "GitHub"];
     const yearsOfExperienceOptions = ["0-3 months", "3-6 months", "6-12 months", "1-2 years", "2+ years"];
 
-    const handleMultiSelectChange = useCallback(
-        (field: ProfileFormField, value: string) => {
-            setFormData((prev) => {
-                if (Array.isArray(prev[field]) && prev[field].includes(value)) {
-                    return {
-                        ...prev,
-                        [field]: (prev[field] as string[]).filter((item) => item !== value),
-                    };
-                } else if (Array.isArray(prev[field])) {
-                    return { ...prev, [field]: [...(prev[field] as string[]), value] };
-                }
-                return prev;
-            });
-        },
-        []
-    );
-    //remove uploaded file
-    const handleRemoveItem = useCallback((field: ProfileFormField, value: string) => {
+    const handleMultiSelectChange = (field: keyof ProfileFormData, value: string) => {
+        setFormData((prev) => {
+            const currentValues = Array.isArray(prev[field]) ? prev[field] as string[] : [];
+            const newValues = currentValues.includes(value)
+                ? currentValues.filter((item) => item !== value)
+                : [...currentValues, value];
+            return {
+                ...prev,
+                [field]: newValues,
+            };
+        });
+    };
+
+    const handleRemoveItem = (field: keyof ProfileFormData, value: string) => {
         setFormData((prev) => ({
             ...prev,
-            [field]: (prev[field] as string[]).filter((item) => item !== value),
+            [field]: Array.isArray(prev[field])
+                ? (prev[field] as string[]).filter((item) => item !== value)
+                : prev[field],
         }));
-    }, []);
-
+    };
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const isOutside = Object.values(dropdownRefs.current).every(
@@ -85,6 +83,18 @@ export default function ProfilePage() {
         }
     };
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const isOutside = Object.values(dropdownRefs.current).every(
+                (ref) => ref && !ref.contains(event.target as Node)
+            );
+            if (isOutside) setOpenDropdown(null);
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     return (
         <div className={`min-h-screen max-w-7xl mx-auto ${inter.className}`}>
             <div className="p-10">
@@ -103,12 +113,14 @@ export default function ProfilePage() {
                             setOpenDropdown={setOpenDropdown}
                             handleMultiSelectChange={handleMultiSelectChange}
                             handleRemoveItem={handleRemoveItem}
-                            customValue={customValue}
-                            setCustomValue={setCustomValue}
+                            allowCustom
+                            customValue={customSkills}
+                            setCustomValue={setCustomSkills}
                             setFormData={setFormData}
                             dropdownRef={(el) => {
                                 dropdownRefs.current.coreSkills = el;
                             }}
+                            mode="multi"
                         />
 
                         {/* Current Skill Level */}
@@ -148,6 +160,7 @@ export default function ProfilePage() {
                             dropdownRef={(el) => {
                                 dropdownRefs.current.tools = el;
                             }}
+                            mode="multi"
                         />
 
                         {/* Years of Experience */}
@@ -161,11 +174,9 @@ export default function ProfilePage() {
                             setOpenDropdown={setOpenDropdown}
                             handleMultiSelectChange={handleMultiSelectChange}
                             handleRemoveItem={handleRemoveItem}
-                            customValue={customValue}
-                            setCustomValue={setCustomValue}
                             setFormData={setFormData}
                             dropdownRef={(el) => {
-                                dropdownRefs.current.coreSkills = el;
+                                dropdownRefs.current.yearsExperience = el;
                             }}
                         />
 
