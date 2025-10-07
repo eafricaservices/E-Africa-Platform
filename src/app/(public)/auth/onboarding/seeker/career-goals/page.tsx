@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Footer, Header, Stepper } from "../ui";
 import { Inter } from "next/font/google";
-import MultiSelectDropdown from "../components/MultiSelectDropdown";
+import { MultiSelectDropdown } from "../components";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -79,7 +79,6 @@ export default function CareerGoalsPage() {
       );
       if (isOutside) setOpenDropdown(null);
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -93,7 +92,7 @@ export default function CareerGoalsPage() {
 
           <div className="space-y-6 p-6 mb-5 bg-[#F7F9F9] rounded-lg">
             <MultiSelectDropdown<CareerGoalsFormData>
-              label="Preferred Career Path"
+              label="Preferred Career Path*"
               field="preferredCareerPath"
               options={careerPathOptions}
               placeholder="e.g., Product Design"
@@ -109,6 +108,7 @@ export default function CareerGoalsPage() {
               dropdownRef={(el) => {
                 dropdownRefs.current.preferredCareerPath = el;
               }}
+              required={true}
             />
 
             <MultiSelectDropdown<CareerGoalsFormData>
@@ -125,6 +125,7 @@ export default function CareerGoalsPage() {
               dropdownRef={(el) => {
                 dropdownRefs.current.primaryCareerGoal = el;
               }}
+              required={true}
             />
 
             <MultiSelectDropdown<CareerGoalsFormData>
@@ -144,8 +145,8 @@ export default function CareerGoalsPage() {
               dropdownRef={(el) => {
                 dropdownRefs.current.industryOfInterest = el;
               }}
+              required={true}
             />
-
 
             <div>
               <label className="block text-sm font-medium text-gray-800 mb-2">
@@ -154,7 +155,7 @@ export default function CareerGoalsPage() {
               </label>
               <input
                 type="text"
-                placeholder="e.g., UX Designer, Backend Developer, e.t.c."
+                placeholder="e.g., UX Designer, Backend Developer, etc."
                 value={formData.targetJobRoles}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -170,7 +171,7 @@ export default function CareerGoalsPage() {
               label="Expected Timeline to Achieve Goal"
               field="expectedTimeline"
               options={timelineOptions}
-              placeholder="Select. e.g., 0-3 months, 3-6 months, e.t.c."
+              placeholder="Select. e.g., 0-3 months, 3-6 months, etc."
               formData={formData}
               openDropdown={openDropdown}
               setOpenDropdown={setOpenDropdown}
@@ -180,9 +181,10 @@ export default function CareerGoalsPage() {
               dropdownRef={(el) => {
                 dropdownRefs.current.expectedTimeline = el;
               }}
+              required={true}
             />
 
-            <Footer />
+            <Footer stepNumber={2} formData={formData} />
           </div>
         </div>
       </div>

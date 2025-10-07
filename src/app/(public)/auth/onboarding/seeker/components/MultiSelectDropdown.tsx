@@ -1,4 +1,3 @@
-// MultiSelectDropdown.tsx
 "use client";
 import React, { useCallback } from "react";
 import { ChevronDown, X } from "lucide-react";
@@ -20,6 +19,7 @@ export interface MultiSelectDropdownProps<T extends Record<string, any>> {
   dropdownRef: (el: HTMLDivElement | null) => void;
   className?: string;
   mode?: "multi" | "single";
+  required?: boolean;
 }
 
 function MultiSelectDropdown<T extends Record<string, any>>({

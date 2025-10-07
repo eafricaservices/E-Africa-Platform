@@ -5,7 +5,7 @@ import { Inter } from "next/font/google";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, CheckCircle } from "lucide-react";
+import { Check } from "lucide-react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +22,7 @@ export default function OnboardingPage() {
   const handleContinue = () => {
     if (selectedRole == "provider") {
       router.push(`/auth/onboarding/${selectedRole}`);
-    } else if (selectedRole == "seeker") {
+    } else if (selectedRole == "seeker/personal-information") {
       router.push(`/auth/onboarding/${selectedRole}/personal-information`);
     }
   };

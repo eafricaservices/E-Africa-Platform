@@ -3,11 +3,11 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Inter } from "next/font/google";
 import { Footer, Header, Stepper } from "../ui";
 import { Plus, Upload, CheckCircle } from "lucide-react";
-import { MultiSelectDropdown } from "../components";
+import { updateProfileStep4 } from "@/lib/api/endpoints/auth";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export type ProfileFormData = {
+export type FinalDetailsData = {
   coreSkills: string[];
   skillLevel: string[];
   tools: string[];
@@ -18,10 +18,10 @@ export type ProfileFormData = {
   links: { label: string; url: string }[];
 };
 
-type ProfileFormField = keyof ProfileFormData;
+type FinalDetailsField = keyof FinalDetailsData;
 
 const Page = () => {
-  const [formData, setFormData] = useState<ProfileFormData>({
+  const [formData, setFormData] = useState<FinalDetailsData>({
     coreSkills: [],
     skillLevel: [],
     tools: [],
@@ -32,52 +32,13 @@ const Page = () => {
     links: [],
   });
 
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [customValue, setCustomValue] = useState("");
-  const [customTools, setCustomTools] = useState("");
-  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Dropdown options
-  const skillsOptions = ["UI/UX Design", "Mobile Development", "Frontend", "Backend", "Python"];
-  const skillLevelOptions = ["Beginner", "Intermediate", "Advanced", "Expert"];
-  const toolsOptions = ["Figma", "Adobe XD", "VS Code", "Jira", "GitHub"];
-  const yearsOfExperienceOptions = ["0-3 months", "3-6 months", "6-12 months", "1-2 years", "2+ years"];
-
-  const handleMultiSelectChange = useCallback(
-    (field: ProfileFormField, value: string) => {
-      setFormData((prev) => {
-        if (Array.isArray(prev[field]) && prev[field].includes(value)) {
-          return {
-            ...prev,
-            [field]: (prev[field] as string[]).filter((item) => item !== value),
-          };
-        } else if (Array.isArray(prev[field])) {
-          return { ...prev, [field]: [...(prev[field] as string[]), value] };
-        }
-        return prev;
-      });
-    },
-    []
-  );
-
-  const handleRemoveItem = useCallback((field: ProfileFormField, value: string) => {
+  const handleRemoveItem = useCallback((field: FinalDetailsField, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: (prev[field] as string[]).filter((item) => item !== value),
     }));
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const isOutside = Object.values(dropdownRefs.current).every(
-        (ref) => ref && !ref.contains(event.target as Node)
-      );
-      if (isOutside) setOpenDropdown(null);
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // File upload handler
@@ -106,79 +67,91 @@ const Page = () => {
     setFormData((prev) => ({ ...prev, links: newLinks }));
   };
 
+  // ✅ Submit handler for Step 4 (uses your existing Footer button)
+  const handleSubmit = async () => {
+    try {
+      const response = await updateProfileStep4(formData);
+      console.log("✅ Final details updated successfully:", response);
+    } catch (error) {
+      console.error("❌ Error updating final details:", error);
+    }
+  };
+
   return (
     <div className={`min-h-screen max-w-7xl mx-auto ${inter.className}`}>
       <div className="p-10">
         <Header />
         <div className="p-6">
           <Stepper />
+
           {/* Documents upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Certifications (Optional)
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  multiple
-                  onChange={handleFileUpload}
-                />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Certifications (Optional)
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                multiple
+                onChange={handleFileUpload}
+              />
 
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mb-3">
-                    <Upload className="text-yellow-600" size={32} />
-                  </div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Upload</p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Provide certification documents relevant to your career
-                  </p>
-                  {Array.isArray(formData.certifications) &&
-                    formData.certifications.length > 0 && (
-                      <ul className="text-xs text-center w-full max-w-sm mx-auto mt-1 space-y-1">
-                        {formData.certifications.map((file, index) => (
-                          <li
-                            key={index}
-                            className="text-xs text-green-700 font-medium mb-3"
-                          >
-                            <span className="truncate">
-                              <CheckCircle className="inline w-4 h-4 mr-1" />{" "}
-                              {file.name}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  certifications: prev.certifications
-                                    ? prev.certifications.filter((_, i) => i !== index)
-                                    : [],
-                                }))
-                              }
-                              className="ml-2 text-red-600 hover:underline cursor-pointer"
-                            >
-                              Remove
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  <button
-                    type="button"
-                    className="bg-[#13672B] text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-green-900 transition-colors cursor-pointer"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Choose file(s)
-                  </button>
-
-                  <p className="text-xs text-gray-400 mt-2">
-                    Max 10MB per file. DOC, DOCX, PDF supported
-                  </p>
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mb-3">
+                  <Upload className="text-yellow-600" size={32} />
                 </div>
+                <p className="text-sm font-medium text-gray-700 mb-1">Upload</p>
+                <p className="text-xs text-gray-500 mb-3">
+                  Provide certification documents relevant to your career
+                </p>
+                {Array.isArray(formData.certifications) &&
+                  formData.certifications.length > 0 && (
+                    <ul className="text-xs text-center w-full max-w-sm mx-auto mt-1 space-y-1">
+                      {formData.certifications.map((file, index) => (
+                        <li
+                          key={index}
+                          className="text-xs text-green-700 font-medium mb-3"
+                        >
+                          <span className="truncate">
+                            <CheckCircle className="inline w-4 h-4 mr-1" />{" "}
+                            {file.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                certifications: prev.certifications
+                                  ? prev.certifications.filter((_, i) => i !== index)
+                                  : [],
+                              }))
+                            }
+                            className="ml-2 text-red-600 hover:underline cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                <button
+                  type="button"
+                  className="bg-[#13672B] text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-green-900 transition-colors cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose file(s)
+                </button>
+
+                <p className="text-xs text-gray-400 mt-2">
+                  Max 10MB per file. DOC, DOCX, PDF supported
+                </p>
               </div>
             </div>
+          </div>
+
           <form className="mt-3 space-y-6">
             {/* LinkedIn Profile */}
             <div className="mb-6">
@@ -245,7 +218,7 @@ const Page = () => {
               </button>
             </div>
 
-            <Footer />
+            <Footer stepNumber={4} formData={formData} />
           </form>
         </div>
       </div>

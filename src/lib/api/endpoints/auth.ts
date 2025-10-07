@@ -107,3 +107,78 @@ export async function updateResetPassword(input: {
     responseSchema: BasicResponseSchema.optional(),
   });
 }
+
+// ========== SERVICE SEEKER API HELPERS ==========
+
+// Fetch the current user's service seeker profile
+export const fetchProfile = async () => {
+  const res = await fetch("/api/service-seekers/profile", {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch profile");
+  }
+
+  return res.json();
+};
+
+// Update Step 1 - Personal Information
+export const updateProfileStep1 = async (data: any) => {
+  const res = await fetch("/api/service-seekers/profile/step-1", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update personal information");
+  }
+
+  return res.json();
+};
+
+// Update Step 2 - Career Goals
+export const updateProfileStep2 = async (data: any) => {
+  const res = await fetch("/api/service-seekers/profile/step-2", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update career goals");
+  }
+
+  return res.json();
+};
+
+// Update Step 3 - Skills and Expertise
+export const updateProfileStep3 = async (data: any) => {
+  const res = await fetch("/api/service-seekers/profile/step-3", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update skills and expertise");
+  }
+
+  return res.json();
+};
+
+// Update Step 4 - Final Details
+export const updateProfileStep4 = async (data: any) => {
+  const res = await fetch("/api/service-seekers/profile/step-4", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update final details");
+  }
+
+  return res.json();
+};

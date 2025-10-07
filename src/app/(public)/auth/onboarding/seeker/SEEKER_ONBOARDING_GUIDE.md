@@ -169,7 +169,7 @@ This document provides a detailed walkthrough of the seeker onboarding process, 
 - Supports custom skill addition
 - Placeholder: "e.g., UI/UX Design, HTML, Python"
 
-**2. Current Skill Level** (Multi-Select):
+`**2. Current Skill Level** (Multi-Select):
 
 - **Multi-choice dropdown** with options:
   - "Beginner"

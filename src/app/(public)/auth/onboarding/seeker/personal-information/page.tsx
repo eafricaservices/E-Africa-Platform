@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Footer, Header, Stepper } from "../ui";
 import { Inter } from "next/font/google";
@@ -7,6 +8,7 @@ import { MultiSelectDropdown } from "../components";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function PersonalInformationPage() {
+
   const [formData, setFormData] = useState({
     fullName: "",
     city: "",
@@ -15,6 +17,7 @@ export default function PersonalInformationPage() {
     careerStage: [] as string[],
     bio: "",
   });
+
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const careerStageOptions = [
@@ -71,15 +74,12 @@ export default function PersonalInformationPage() {
 
   return (
     <div className={`p-8 ${inter.className}`}>
-      {/* Header */}
       <Header />
 
-      <div className="p-6 bg-white">
-        {/* Stepper */}
+      <div className="p-6 bg-white rounded-lg">
         <Stepper />
 
-        {/* Personal Information Form */}
-        <form className="space-y-6 p-6 bg-[#F7F9F9]">
+        <form className="space-y-6 p-6 bg-[#F7F9F9] rounded-lg">
           {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -90,7 +90,8 @@ export default function PersonalInformationPage() {
               placeholder="Enter your full name"
               value={formData.fullName}
               onChange={(e) => handleInputChange("fullName", e.target.value)}
-              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
+              required
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none placeholder:text-sm"
             />
           </div>
 
@@ -104,7 +105,7 @@ export default function PersonalInformationPage() {
               placeholder="e.g., Ikeja"
               value={formData.city}
               onChange={(e) => handleInputChange("city", e.target.value)}
-              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none placeholder:text-sm"
             />
           </div>
 
@@ -115,10 +116,10 @@ export default function PersonalInformationPage() {
             </label>
             <input
               type="text"
-              placeholder="e.g., Lagos"
+              placeholder="e.g., Lagos state"
               value={formData.state}
               onChange={(e) => handleInputChange("state", e.target.value)}
-              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none placeholder:text-sm"
             />
           </div>
 
@@ -132,7 +133,7 @@ export default function PersonalInformationPage() {
               placeholder="e.g., Nigeria"
               value={formData.country}
               onChange={(e) => handleInputChange("country", e.target.value)}
-              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm"
+              className="w-full px-3 py-2 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none placeholder:text-sm"
             />
           </div>
 
@@ -152,6 +153,7 @@ export default function PersonalInformationPage() {
               dropdownRef={(el) => {
                 dropdownRefs.current.careerStage = el;
               }}
+              required={true}
             />
           </div>
 
@@ -166,18 +168,20 @@ export default function PersonalInformationPage() {
               onChange={(e) => handleInputChange("bio", e.target.value)}
               rows={4}
               maxLength={500}
-              className="w-full px-3 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none transition-colors placeholder:text-sm resize-none"
+              className="w-full px-3 py-3 border border-[#13672B] rounded-lg focus:ring-1 focus:ring-green-800 focus:border-green-800 outline-none placeholder:text-sm resize-none"
             />
             <div className="text-right text-sm text-gray-500 mt-1">
               {formData.bio.length} / 500
             </div>
           </div>
 
-          <Footer />
+          {/* Footer handles submission */}
+          <Footer
+            stepNumber={1}
+            formData={formData}
+          />
         </form>
       </div>
     </div>
   );
 }
-// Removed custom useRef implementation; using React's useRef instead.
-
