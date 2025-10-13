@@ -40,18 +40,26 @@ export async function jsonFetch<T = void>(
     responseSchema?: z.ZodSchema<T>;
   }
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  if (!API_BASE) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured");
+  }
+  const fullUrl = `${API_BASE}${path}`;
+
+  const res = await fetch(fullUrl, {
     method: opts?.method ?? "GET",
     headers: { "Content-Type": "application/json", accept: "application/json" },
+    credentials: "include",
     body: opts?.body !== undefined ? JSON.stringify(opts.body) : undefined,
   });
 
   if (!res.ok) {
     let serverMsg = "";
+    let details: unknown;
     try {
       const ct = res.headers.get("content-type") || "";
       if (ct.includes("application/json")) {
         const data = await res.json();
+        details = data;
         serverMsg = pickMessage(data) || JSON.stringify(data);
       } else {
         serverMsg = await res.text();
@@ -70,7 +78,7 @@ export async function jsonFetch<T = void>(
         ? "Server error. Please try again later."
         : "Request failed.");
 
-    throw new ApiError(msg, res.status);
+    throw new ApiError(msg, res.status, details);
   }
 
   if (!opts?.responseSchema) {

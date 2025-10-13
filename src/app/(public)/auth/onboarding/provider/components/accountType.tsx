@@ -1,14 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 interface AccountTypeProps {
-  onSelectionChange?: (selectedTypes: string[]) => void;
+  selectedTypes: string[];
+  onSelectionChange: (selectedTypes: string[]) => void;
+  error?: string;
 }
 
-export default function AccountType({ onSelectionChange }: AccountTypeProps) {
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-
+export default function AccountType({
+  selectedTypes,
+  onSelectionChange,
+  error,
+}: AccountTypeProps) {
   const handleTypeChange = (type: string) => {
     let newSelection: string[];
 
@@ -23,9 +27,7 @@ export default function AccountType({ onSelectionChange }: AccountTypeProps) {
         newSelection = [...filteredTypes, type];
       }
     }
-
-    setSelectedTypes(newSelection);
-    onSelectionChange?.(newSelection);
+    onSelectionChange(newSelection);
   };
 
   const isAltruistSelected = selectedTypes.includes("altruist");
@@ -69,6 +71,7 @@ export default function AccountType({ onSelectionChange }: AccountTypeProps) {
           Select all that apply. You can choose to be both a consultant, mentor
           and mentee.
         </p>
+        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

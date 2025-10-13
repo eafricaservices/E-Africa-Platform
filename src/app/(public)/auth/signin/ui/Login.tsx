@@ -3,9 +3,18 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/api/endpoints/auth";
-import { loginWithGoogle } from "@/lib/api/endpoints/auth.client";
+import {
+  DEFAULT_GOOGLE_AUTH_ROLE,
+  loginWithGoogle,
+} from "@/lib/api/endpoints/auth.client";
+import { useAuth } from "@/app/modules/auth/AuthContext";
+import {
+  getPostLoginDestination,
+  resolveRedirectPath,
+} from "@/app/modules/auth/utils";
+import { ApiError } from "@/lib/api/client";
 interface FormState {
   email: string;
   password: string;
@@ -24,15 +33,8 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  // 🔐 Centralized token storage
-  const storeToken = (token: string, remember: boolean) => {
-    if (remember) {
-      localStorage.setItem("authToken", token);
-    } else {
-      sessionStorage.setItem("authToken", token);
-    }
-  };
+  const searchParams = useSearchParams();
+  const { refresh } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -48,17 +50,30 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const data = await login({ email: form.email, password: form.password });
+      await login({ email: form.email, password: form.password });
 
-      if (data?.data?.token) {
-        // Token is nested inside another data object so data?.token did not work
-        storeToken(data.data.token, form.remember);
-        router.push("/dashboard"); // redirect after login
-      } else {
-        setError("Invalid login response. Please try again.");
+      const authenticatedUser = await refresh();
+
+      if (!authenticatedUser) {
+        throw new Error("We couldn't verify your account. Please try again.");
       }
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
+      const redirectParam = searchParams?.get("redirect") ?? null;
+      const safeRedirect = origin && resolveRedirectPath(redirectParam, origin);
+      const destination =
+        safeRedirect ?? getPostLoginDestination(authenticatedUser);
+
+      router.replace(destination);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message || "Invalid login credentials. Please try again.");
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -184,7 +199,7 @@ const Login: React.FC = () => {
       {/* Google Auth */}
       <button
         type="button"
-        onClick={() => loginWithGoogle()}
+        onClick={() => loginWithGoogle(DEFAULT_GOOGLE_AUTH_ROLE)}
         className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
       >
         <Image src="/google.png" alt="Google Icon" width={20} height={20} />

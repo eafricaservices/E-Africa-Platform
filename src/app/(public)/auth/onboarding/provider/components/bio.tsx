@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 interface BioProps {
-  onBioChange?: (bio: string) => void;
+  value: string;
+  onChange: (bio: string) => void;
   maxLength?: number;
+  error?: string;
 }
 
-export default function Bio({ onBioChange, maxLength = 500 }: BioProps) {
-  const [bio, setBio] = useState("");
-
-  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newBio = e.target.value;
+export default function Bio({
+  value,
+  onChange,
+  maxLength = 500,
+  error,
+}: BioProps) {
+  const handleBioChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newBio = event.target.value;
     if (newBio.length <= maxLength) {
-      setBio(newBio);
-      onBioChange?.(newBio);
+      onChange(newBio);
     }
   };
 
@@ -28,18 +32,23 @@ export default function Bio({ onBioChange, maxLength = 500 }: BioProps) {
 
         <div className="relative">
           <textarea
-            value={bio}
+            value={value}
             onChange={handleBioChange}
             placeholder="Tell us about yourself and your professional journey...."
-            className="w-full px-4 py-4 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-gray-900 placeholder-gray-500 resize-none h-32"
+            className={`w-full px-4 py-4 border-1 rounded-lg focus:outline-none focus:ring-1 text-gray-900 placeholder-gray-500 resize-none h-32 ${
+              error
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : "border-[#13672B] focus:border-[#13672B] focus:ring-[#13672B]"
+            }`}
             rows={6}
           />
 
           {/* Character Count */}
           <div className="absolute bottom-3 right-3 text-sm text-gray-500">
-            {bio.length} / {maxLength}
+            {value.length} / {maxLength}
           </div>
         </div>
+        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       </div>
     </div>
   );
