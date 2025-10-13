@@ -43,3 +43,28 @@ export const VerifyCodeResponseSchema = z.object({
 });
 
 export type VerifyCodeResponse = z.infer<typeof VerifyCodeResponseSchema>;
+
+export const AuthUserSchema = z
+  .object({
+    id: z.union([z.string(), z.number()]).optional(),
+    email: EmailSchema.optional(),
+    role: z.string().optional(),
+    onboardingCompleted: z.boolean().optional(),
+    onboardingStatus: z.string().optional(),
+    onboardingCompletedAt: z.string().optional().nullable(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+  })
+  .passthrough();
+
+export const AuthUserResponseSchema = z.union([
+  AuthUserSchema,
+  z
+    .object({
+      data: AuthUserSchema.nullish(),
+      message: z.string().optional(),
+    })
+    .passthrough(),
+]);
+
+export type AuthUser = z.infer<typeof AuthUserSchema>;

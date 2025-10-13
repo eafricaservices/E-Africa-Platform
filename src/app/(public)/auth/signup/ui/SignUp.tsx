@@ -5,7 +5,10 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import VerifyEmailModal from "./VerifyEmailModal";
 import { signUp, sendVerificationCode } from "@/lib/api/endpoints/auth";
-import { loginWithGoogle } from "@/lib/api/endpoints/auth.client";
+import {
+  DEFAULT_GOOGLE_AUTH_ROLE,
+  loginWithGoogle,
+} from "@/lib/api/endpoints/auth.client";
 import { usePasswordValidation } from "@/hooks/usePasswordValidation";
 import { useRouter } from "next/navigation";
 
@@ -18,7 +21,6 @@ interface FormState {
 
 type HandleSubmitEvent = React.FormEvent<HTMLFormElement>;
 
-const GOOGLE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/auth/google";
 const SignUp: React.FC = () => {
   const router = useRouter();
   const [form, setForm] = useState<FormState>({
@@ -229,7 +231,7 @@ const SignUp: React.FC = () => {
       {/* Google Auth */}
       <button
         type="button"
-        onClick={() => loginWithGoogle()}
+        onClick={() => loginWithGoogle(DEFAULT_GOOGLE_AUTH_ROLE)}
         className="w-full flex justify-center bg-[#E0E0E0] py-3 rounded-md hover:bg-[#d6e0d983] transition duration-200 cursor-pointer"
       >
         <Image src="/google.png" alt="Google Icon" width={20} height={20} />
