@@ -7,6 +7,8 @@ import {
   BasicResponseSchema,
 } from "@/lib/api/schemas/auth";
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 //create user
 export async function signUp(input: { email: string; password: string }) {
   const email = EmailSchema.parse(input.email);
@@ -35,7 +37,7 @@ export async function verifyEmail(input: { email: string; code: string }) {
   const email = EmailSchema.parse(input.email);
   const code = CodeSchema.parse(input.code);
 
-  return jsonFetch("/api/verification/verify-email", {
+  return jsonFetch(`${BASE_URL}/api/verification/verify-email`, {
     method: "POST",
     body: { email, code },
     responseSchema: BasicResponseSchema.optional(),
@@ -47,7 +49,7 @@ export async function login(input: { email: string; password: string }) {
   const email = EmailSchema.parse(input.email);
   const password = PasswordSchema.parse(input.password);
 
-  return jsonFetch("/api/auth/login", {
+  return jsonFetch(`/api/auth/login`, {
     method: "POST",
     body: { email, password },
     responseSchema: z.any(),
@@ -57,7 +59,7 @@ export async function login(input: { email: string; password: string }) {
 //reset password
 export async function sendResetCode(input: { email: string }): Promise<void> {
   const email = EmailSchema.parse(input.email);
-  await jsonFetch("/api/verification/reset-password/request", {
+  await jsonFetch(`/api/verification/reset-password/request`, {
     method: "POST",
     body: { email },
     responseSchema: BasicResponseSchema.optional(),
@@ -74,7 +76,7 @@ export async function verifyResetPassword(input: {
   const code = CodeSchema.parse(input.code);
   const newPassword = PasswordSchema.parse(input.newPassword);
 
-  await jsonFetch("/api/verification/reset-password/verify", {
+  await jsonFetch(`/api/verification/reset-password/verify`, {
     method: "POST",
     body: { email, code, newPassword },
     responseSchema: BasicResponseSchema.optional(),
@@ -85,7 +87,7 @@ export async function verifyResetPassword(input: {
 export async function verifyResetCode(input: { email: string; code: string }) {
   const email = EmailSchema.parse(input.email);
   const code = CodeSchema.parse(input.code);
-  return jsonFetch("/api/verification/reset-password/verify-code", {
+  return jsonFetch(`/api/verification/reset-password/verify-code`, {
     method: "POST",
     body: { email, code },
     responseSchema: z.any(),
@@ -178,6 +180,21 @@ export const updateProfileStep4 = async (data: any) => {
 
   if (!res.ok) {
     throw new Error("Failed to update final details");
+  }
+
+  return res.json();
+};
+
+//complete profile
+export const completeProfile = async (data: any) => {
+  const res = await fetch("/api/service-seekers/profile/complete", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to complete profile");
   }
 
   return res.json();

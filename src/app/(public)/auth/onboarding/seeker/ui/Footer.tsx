@@ -8,7 +8,9 @@ import {
   updateProfileStep2,
   updateProfileStep3,
   updateProfileStep4,
+  completeProfile,
 } from "@/lib/api/endpoints/auth";
+import { toast } from "sonner";
 
 interface Step {
   number: number;
@@ -39,12 +41,23 @@ const Footer: React.FC<FooterProps> = ({ stepNumber, formData }) => {
 
   const handleSubmit = async () => {
     try {
-      if (stepNumber === 1) await updateProfileStep1(formData);
-      else if (stepNumber === 2) await updateProfileStep2(formData);
-      else if (stepNumber === 3) await updateProfileStep3(formData);
-      else if (stepNumber === 4) await updateProfileStep4(formData);
+      if (stepNumber === 1) {
+        await updateProfileStep1(formData);
+      } else if (stepNumber === 2) {
+        await updateProfileStep2(formData);
+      } else if (stepNumber === 3) {
+        await updateProfileStep3(formData);
+      } else if (stepNumber === 4) {
+        await updateProfileStep4(formData);
+        await completeProfile(formData);
+        toast.success("🎉 Profile completed successfully!");
+        router.push("/dashboard");
+        return;
+      }
 
-      console.log(`✅ Step ${stepNumber} saved successfully`);
+      toast.success(`✅ Step ${stepNumber} saved successfully`);
+
+      // Navigate to next step or success page
       if (nextStep) router.push(nextStep.href);
     } catch (error) {
       console.error("❌ Error saving step:", error);

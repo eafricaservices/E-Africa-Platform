@@ -7,6 +7,7 @@ import VerifyEmailModal from "./VerifyEmailModal";
 import { signUp, sendVerificationCode } from "@/lib/api/endpoints/auth";
 import { loginWithGoogle } from "@/lib/api/endpoints/auth.client";
 import { usePasswordValidation } from "@/hooks/usePasswordValidation";
+import { useRouter } from "next/navigation";
 
 interface FormState {
   email: string;
@@ -17,9 +18,9 @@ interface FormState {
 
 type HandleSubmitEvent = React.FormEvent<HTMLFormElement>;
 
-const GOOGLE_URL = process.env.NEXT_PUBLIC_API_URL + "/auth/google";
-
+const GOOGLE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/auth/google";
 const SignUp: React.FC = () => {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>({
     email: "",
     password: "",
@@ -77,7 +78,6 @@ const SignUp: React.FC = () => {
 
     try {
       setLoading(true);
-      // signup
       await signUp({ email: form.email, password: form.password });
       // send verification
       await sendVerificationCode({ email: form.email });
@@ -214,7 +214,7 @@ const SignUp: React.FC = () => {
             !form.terms ||
             form.password !== form.confirmPassword
           }
-          className="w-full mt-3 py-2 rounded-md bg-[#13672B] text-white hover:bg-[#097d2a] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full mt-3 py-2 rounded-md bg-[#13672B] text-white hover:bg-[#097d2a] text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {loading ? "Signing Up..." : "Sign Up"}
         </button>
