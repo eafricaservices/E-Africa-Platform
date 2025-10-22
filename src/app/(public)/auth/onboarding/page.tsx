@@ -17,7 +17,7 @@ type RoleOption = {
   subtitle: string;
   image: string;
   perks: string[];
-  target: "provider" | "seeker";
+  target: "provider" | "seeker/personal-information";
 };
 
 const ROLE_OPTIONS: RoleOption[] = [
@@ -33,7 +33,7 @@ const ROLE_OPTIONS: RoleOption[] = [
       "Collaborate and learn from peers",
       "Verified opportunities and guidance",
     ],
-    target: "seeker",
+    target: "seeker/personal-information",
   },
   {
     role: "serviceprovider",
@@ -60,7 +60,7 @@ export default function OnboardingPage() {
       ROLE_OPTIONS.reduce((acc, option) => {
         acc[option.role] = option.target;
         return acc;
-      }, {} as Record<CanonicalRole, "provider" | "seeker">),
+      }, {} as Record<CanonicalRole, "provider" | "seeker/personal-information">),
     []
   );
 

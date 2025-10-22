@@ -23,14 +23,14 @@ const Stepper: React.FC = () => {
 
   const currentStepIndex = steps.findIndex((step) => step.href === pathname);
 
-  // 🧠 Fetch onboarding progress
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  //  Fetch onboarding progress
   useEffect(() => {
     const fetchProgress = async () => {
       try {
         const res = await fetch("/api/service-seekers/progress");
         if (!res.ok) throw new Error("Failed to load progress");
         const data = await res.json();
-        // Example response: { progress: 50 }
         setProgress(data.progress || 0);
       } catch (err) {
         console.error(err);

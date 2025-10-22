@@ -84,7 +84,7 @@ const Footer: React.FC<FooterProps> = ({ stepNumber, formData }) => {
       {/* Continue / Complete Button */}
       {isLastStep ? (
         <button
-          type="button"
+          type="submit"
           onClick={handleSubmit}
           className="px-8 py-2 bg-[#13672B] text-sm text-white font-medium rounded-lg hover:bg-green-700 transition-colors outline-none shadow-sm cursor-pointer"
         >
@@ -92,7 +92,7 @@ const Footer: React.FC<FooterProps> = ({ stepNumber, formData }) => {
         </button>
       ) : (
         <button
-          type="button"
+          type="submit"
           onClick={handleSubmit}
           className="px-8 py-2 bg-[#13672B] text-sm text-white font-medium rounded-lg hover:bg-green-700 transition-colors outline-none shadow-sm cursor-pointer"
         >
