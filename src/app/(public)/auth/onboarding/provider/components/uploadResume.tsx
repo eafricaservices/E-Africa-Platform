@@ -1,15 +1,28 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  uploadResumeDocument,
+  deleteUploadedDocument,
+} from "@/lib/api/endpoints/upload.client";
+import type { ResumeUploadResult } from "@/lib/api/schemas/upload";
+import { ApiError } from "@/lib/api/client";
 
 interface UploadResumeProps {
-  onFileUpload?: (file: File) => void;
+  value?: ResumeUploadResult | null;
+  onFileUpload?: (data: ResumeUploadResult | null) => void;
+  errorMessage?: string | null;
 }
 
-export default function UploadResume({ onFileUpload }: UploadResumeProps) {
-  const [file, setFile] = useState<File | null>(null);
+export default function UploadResume({
+  value,
+  onFileUpload,
+  errorMessage,
+}: UploadResumeProps) {
+  const [fileMeta, setFileMeta] = useState<ResumeUploadResult | null>(
+    value ?? null
+  );
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,23 +54,40 @@ export default function UploadResume({ onFileUpload }: UploadResumeProps) {
     }
 
     setError("");
-    setFile(selectedFile);
     setUploading(true);
-    setUploadProgress(0);
 
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setUploading(false);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
+    try {
+      const uploaded = await uploadResumeDocument(selectedFile);
 
-    onFileUpload?.(selectedFile);
+      const enriched: ResumeUploadResult = {
+        ...uploaded,
+        fileName: selectedFile.name,
+        fileType: selectedFile.type || uploaded.fileType || "application/pdf",
+        fileSize:
+          typeof selectedFile.size === "number"
+            ? selectedFile.size
+            : uploaded.fileSize,
+        fileUrl: uploaded.fileUrl,
+        cloudinaryPublicId: uploaded.cloudinaryPublicId,
+        uploadedAt: uploaded.uploadedAt ?? new Date().toISOString(),
+      };
+
+      setFileMeta(enriched);
+      onFileUpload?.(enriched);
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Unable to upload document. Please try again.";
+      setError(message);
+      setFileMeta(null);
+      onFileUpload?.(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -91,24 +121,48 @@ export default function UploadResume({ onFileUpload }: UploadResumeProps) {
     fileInputRef.current?.click();
   };
 
-  const handleRemoveFile = (e: React.MouseEvent) => {
+  const handleRemoveFile = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setFile(null);
+
+    if (uploading) {
+      return;
+    }
+
+    if (fileMeta?.cloudinaryPublicId) {
+      try {
+        await deleteUploadedDocument(fileMeta.cloudinaryPublicId);
+      } catch {
+        // Ignore cleanup failures so the user can continue.
+      }
+    }
+
+    setFileMeta(null);
     setError("");
-    setUploadProgress(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    onFileUpload?.(null);
   };
+
+  useEffect(() => {
+    if (!value) {
+      setFileMeta(null);
+      setError("");
+      return;
+    }
+
+    setFileMeta(value);
+    setError("");
+  }, [value]);
 
   return (
     <div
       className={`relative border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-200 ${
         isDragging
           ? "border-[#13672B] bg-green-50"
-          : error
+          : error || errorMessage
           ? "border-red-300 bg-red-50"
-          : file
+          : fileMeta
           ? "border-[#13672B] bg-green-50"
           : "border-[#13672B] bg-gray-50 hover:bg-green-50"
       }`}
@@ -139,22 +193,26 @@ export default function UploadResume({ onFileUpload }: UploadResumeProps) {
       {/* Upload Content */}
       {uploading ? (
         <div className="space-y-3">
-          <p className="text-gray-700 font-medium">Uploading {file?.name}...</p>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-[#13672B] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${uploadProgress}%` }}
-            ></div>
+          <p className="text-gray-700 font-medium">
+            Uploading {fileMeta?.fileName ?? "document"}...
+          </p>
+          <div className="flex items-center justify-center gap-1">
+            <span className="h-2 w-2 animate-ping rounded-full bg-[#13672B]" />
+            <span className="h-2 w-2 animate-ping rounded-full bg-[#13672B] [animation-delay:150ms]" />
+            <span className="h-2 w-2 animate-ping rounded-full bg-[#13672B] [animation-delay:300ms]" />
           </div>
-          <p className="text-sm text-gray-600">{uploadProgress}%</p>
+          <p className="text-sm text-gray-600">Please wait</p>
         </div>
-      ) : file ? (
+      ) : fileMeta ? (
         <div className="space-y-2">
           <p className="text-[#13672B] font-medium">
-            ✓ {file.name} uploaded successfully
+            ✓ {fileMeta.fileName ?? "Document"} uploaded successfully
           </p>
           <p className="text-sm text-gray-600">
-            {(file.size / (1024 * 1024)).toFixed(2)} MB
+            {fileMeta.fileSize
+              ? (fileMeta.fileSize / (1024 * 1024)).toFixed(2)
+              : ""}
+            {fileMeta.fileSize ? " MB" : ""}
           </p>
           <button
             onClick={handleRemoveFile}
@@ -184,8 +242,10 @@ export default function UploadResume({ onFileUpload }: UploadResumeProps) {
       )}
 
       {/* Error Message */}
-      {error && (
-        <p className="text-red-600 text-sm mt-2 font-medium">{error}</p>
+      {(error || errorMessage) && (
+        <p className="text-red-600 text-sm mt-2 font-medium">
+          {error || errorMessage}
+        </p>
       )}
     </div>
   );

@@ -11,6 +11,7 @@ import CompletedStep from "./ui/completedStep";
 import {
   getProviderOnboardingProgress,
   submitProviderOnboardingStep1,
+  submitProviderOnboardingStep2,
   type ProviderOnboardingProgressSummary,
 } from "@/lib/api/endpoints/providerOnboarding.client";
 import { updateUser } from "@/lib/api/endpoints/user.client";
@@ -25,6 +26,7 @@ import {
 } from "@/lib/auth/roleMappings";
 import type { ProfileFormValues } from "./components/profileForm";
 import type { ProfilePictureUploadResult } from "@/lib/api/schemas/upload";
+import LoadingOverlay from "./components/loadingOverlay";
 
 type ProfileFieldErrors = Partial<Record<keyof ProfileFormValues, string>>;
 
@@ -73,6 +75,21 @@ export default function Flow() {
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [submittingStep, setSubmittingStep] = useState(false);
   const [ensuringRole, setEnsuringRole] = useState(false);
+
+  // Step 2 state
+  const [loadingOverlayOpen, setLoadingOverlayOpen] = useState(false);
+  const [loadingOverlayStatus, setLoadingOverlayStatus] = useState<
+    "loading" | "success" | "error"
+  >("loading");
+  const [loadingOverlayMessage, setLoadingOverlayMessage] = useState("");
+  const [step2Values, setStep2Values] = useState({
+    primaryExpertise: "",
+    educationLevel: "",
+    portfolioOrResume: null as any,
+    linkedinProfileUrl: "",
+    websiteUrl: "",
+  });
+  const [step2Errors, setStep2Errors] = useState<Record<string, string>>({});
 
   const determineStepIndex = useCallback(
     (summary: ProviderOnboardingProgressSummary) => {
@@ -263,7 +280,8 @@ export default function Flow() {
 
         if (error instanceof ApiError && error.status === 403) {
           setGeneralError(
-            "Your account must be upgraded to a service provider before continuing."
+            error.message ||
+              "Your account must be upgraded to a service provider before continuing."
           );
           setLoadingError(null);
         } else if (error instanceof Error) {
@@ -464,6 +482,30 @@ export default function Flow() {
       return;
     }
 
+    const normalizedProfilePhoto = profilePhoto
+      ? {
+          ...profilePhoto,
+          fileName:
+            profilePhoto.fileName ??
+            profilePhoto.cloudinaryPublicId ??
+            profilePhoto.publicId,
+          fileUrl: profilePhoto.fileUrl ?? profilePhoto.imageUrl,
+          fileType:
+            profilePhoto.fileType ??
+            (profilePhoto.format
+              ? `image/${profilePhoto.format}`
+              : undefined) ??
+            "image/jpeg",
+          fileSize:
+            typeof profilePhoto.fileSize === "number"
+              ? profilePhoto.fileSize
+              : profilePhoto.bytes,
+          cloudinaryPublicId:
+            profilePhoto.cloudinaryPublicId ?? profilePhoto.publicId,
+          uploadedAt: profilePhoto.uploadedAt ?? new Date().toISOString(),
+        }
+      : undefined;
+
     const payload = {
       fullName: profileValues.fullName.trim(),
       professionalTitle: profileValues.professionalTitle.trim(),
@@ -472,7 +514,7 @@ export default function Flow() {
       location: profileValues.location.trim(),
       accountTypes,
       bio: bio.trim(),
-      profilePhoto: profilePhoto ?? undefined,
+      profilePhoto: normalizedProfilePhoto,
     };
 
     setSubmittingStep(true);
@@ -522,6 +564,101 @@ export default function Flow() {
   const handleNavigateForward = useCallback(() => {
     setCurrentStepIndex((prev) => Math.min(5, prev + 1));
   }, []);
+
+  const handleSubmitStep2 = useCallback(
+    async (formData: any) => {
+      setGeneralError(null);
+      setStep2Errors({});
+
+      const resumeData = formData.portfolioOrResume;
+
+      if (!resumeData) {
+        setStep2Errors({
+          portfolioOrResume: "Portfolio or resume file is required.",
+        });
+        return;
+      }
+
+      if (!resumeData.fileUrl) {
+        setStep2Errors({
+          portfolioOrResume:
+            "Uploaded resume is missing a file URL. Please re-upload and try again.",
+        });
+        return;
+      }
+
+      const normalizedResume = {
+        fileName: resumeData.fileName,
+        fileUrl: resumeData.fileUrl,
+        fileType: resumeData.fileType,
+        fileSize: resumeData.fileSize,
+        uploadedAt: resumeData.uploadedAt ?? new Date().toISOString(),
+        cloudinaryPublicId: resumeData.cloudinaryPublicId,
+      };
+
+      const payload = {
+        primaryExpertise: formData.primaryExpertise,
+        educationLevel: formData.educationLevel,
+        portfolioOrResume: normalizedResume,
+        linkedinProfileUrl: formData.linkedinProfileUrl,
+        websiteUrl: formData.websiteUrl,
+      };
+
+      setLoadingOverlayOpen(true);
+      setLoadingOverlayStatus("loading");
+      setLoadingOverlayMessage("Saving your profile...");
+
+      const isUpdate = progress?.completedSteps?.includes(2) ?? false;
+
+      try {
+        await submitProviderOnboardingStep2(payload, { isUpdate });
+        setLoadingOverlayStatus("success");
+        setLoadingOverlayMessage("Profile saved successfully!");
+
+        setTimeout(async () => {
+          try {
+            await loadProgress();
+            setLoadingOverlayOpen(false);
+            handleNavigateForward();
+          } catch {
+            setLoadingOverlayStatus("error");
+            setLoadingOverlayMessage(
+              "Profile saved, but progress could not be refreshed."
+            );
+          }
+        }, 1000);
+      } catch (error) {
+        setLoadingOverlayStatus("error");
+
+        if (error instanceof ApiError) {
+          if (error.status === 400 && error.details) {
+            const errorData = error.details as Record<string, any>;
+            if (errorData.errors) {
+              setStep2Errors(errorData.errors);
+              setLoadingOverlayMessage(
+                errorData.message || "Please review the highlighted fields."
+              );
+            } else {
+              setLoadingOverlayMessage(
+                errorData.message || "Unable to save profile."
+              );
+            }
+          } else {
+            setLoadingOverlayMessage(
+              error.message || "Unable to save profile."
+            );
+          }
+        } else {
+          setLoadingOverlayMessage("Unable to save profile. Please try again.");
+        }
+
+        setTimeout(() => {
+          setLoadingOverlayOpen(false);
+        }, 2000);
+      }
+    },
+    [progress, loadProgress, handleNavigateForward]
+  );
 
   const handleReset = useCallback(() => {
     setCurrentStepIndex(0);
@@ -587,8 +724,10 @@ export default function Flow() {
     if (currentStepIndex === 1) {
       return (
         <ExpertPortfolio
+          onSubmit={handleSubmitStep2}
           onNext={handleNavigateForward}
           onPrevious={handleNavigateBack}
+          errors={step2Errors}
         />
       );
     }
@@ -644,7 +783,24 @@ export default function Flow() {
     handleNavigateBack,
     handleReset,
     loadProgress,
+    handleSubmitStep2,
   ]);
 
-  return <div>{stepContent}</div>;
+  return (
+    <div>
+      {stepContent}
+      <LoadingOverlay
+        open={loadingOverlayOpen}
+        status={loadingOverlayStatus}
+        title={
+          loadingOverlayStatus === "success"
+            ? "Success"
+            : loadingOverlayStatus === "error"
+            ? "Error"
+            : "Saving"
+        }
+        description={loadingOverlayMessage}
+      />
+    </div>
+  );
 }

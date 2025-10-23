@@ -44,9 +44,14 @@ export async function updateUser(
 
   if (response && typeof response === "object") {
     const normalized = { ...(response as Record<string, unknown>) };
-    const canonicalRole = normalizeToCanonicalRole(
-      typeof normalized.role === "string" ? (normalized.role as string) : null
-    );
+    const rawRole =
+      typeof normalized.role === "string"
+        ? (normalized.role as string)
+        : undefined;
+    const canonicalRole = normalizeToCanonicalRole(rawRole ?? null);
+    if (rawRole) {
+      normalized.backendRole = rawRole;
+    }
     if (canonicalRole) {
       normalized.role = canonicalRole;
     }

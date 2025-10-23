@@ -1,7 +1,6 @@
 import type { AuthUser } from "@/lib/api/schemas/auth";
 import {
   isCanonicalProviderRole,
-  isCanonicalSeekerRole,
   normalizeToCanonicalRole,
 } from "@/lib/auth/roleMappings";
 
@@ -65,14 +64,27 @@ export function hasCompletedOnboarding(user: AuthUser): boolean {
 
 export function getPostLoginDestination(user: AuthUser): string {
   if (!hasCompletedOnboarding(user)) {
-    const role = normalizeToCanonicalRole(user.role);
+    const backendRoleRaw =
+      typeof (user as Record<string, unknown>).backendRole === "string"
+        ? ((user as Record<string, unknown>).backendRole as string)
+        : undefined;
+
+    const normalizedBackendRole = backendRoleRaw?.toLowerCase();
+    if (
+      normalizedBackendRole === "talent" ||
+      normalizedBackendRole === "trainee"
+    ) {
+      return "/auth/onboarding";
+    }
+
+    const role = normalizeToCanonicalRole(user.role ?? backendRoleRaw);
     if (!role) {
       return "/auth/onboarding";
     }
-    if (isProviderRole(role)) {
+    if (role === "serviceprovider") {
       return "/auth/onboarding/provider";
     }
-    if (isCanonicalSeekerRole(role)) {
+    if (role === "serviceseeker") {
       return "/auth/onboarding/seeker";
     }
     return "/auth/onboarding";

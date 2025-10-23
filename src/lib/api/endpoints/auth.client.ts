@@ -28,13 +28,48 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
 
     const user = AuthUserSchema.parse(payload);
 
-    const canonicalRole = normalizeToCanonicalRole(user.role);
+    const rawRole =
+      typeof user.role === "string" ? (user.role as string) : undefined;
+    const canonicalRole = normalizeToCanonicalRole(rawRole);
 
-    return {
+    const candidateRecord = user as Record<string, unknown>;
+
+    const idFromSchema =
+      typeof user.id === "number"
+        ? String(user.id)
+        : typeof user.id === "string" && user.id.trim() !== ""
+        ? user.id
+        : undefined;
+
+    const idFromUserId =
+      typeof candidateRecord.userId === "string" &&
+      (candidateRecord.userId as string).trim() !== ""
+        ? (candidateRecord.userId as string)
+        : undefined;
+
+    const idFromUnderscore =
+      typeof candidateRecord._id === "string" &&
+      (candidateRecord._id as string).trim() !== ""
+        ? (candidateRecord._id as string)
+        : undefined;
+
+    const resolvedId = idFromSchema ?? idFromUserId ?? idFromUnderscore;
+
+    const normalizedUser: AuthUser = {
       ...user,
-      id: typeof user.id === "number" ? String(user.id) : user.id ?? undefined,
-      role: canonicalRole ?? user.role,
+      id: resolvedId,
+      role: canonicalRole ?? rawRole,
     } as AuthUser;
+
+    if (resolvedId) {
+      (normalizedUser as Record<string, unknown>).userId = resolvedId;
+    }
+
+    if (rawRole) {
+      (normalizedUser as Record<string, unknown>).backendRole = rawRole;
+    }
+
+    return normalizedUser;
   } catch (error) {
     // If it's a 401, user is not authenticated - this is expected, not an error
     if (

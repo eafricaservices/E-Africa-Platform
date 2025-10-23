@@ -20,13 +20,29 @@ export const ProfilePictureUploadResponseSchema = z.object({
 
 export type ProfilePictureUploadResult = z.infer<
   typeof ProfilePictureUploadResponseSchema
->["data"];
+>["data"] & {
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  fileUrl?: string;
+  cloudinaryPublicId?: string;
+  uploadedAt?: string;
+};
 
 export const ProfilePictureUploadErrorResponseSchema = z.object({
   success: z.literal(false),
   error: UploadErrorSchema.optional(),
   message: z.string().optional(),
 });
+
+export type ResumeUploadResult = {
+  fileName?: string;
+  fileUrl: string;
+  fileType?: string;
+  fileSize?: number;
+  cloudinaryPublicId: string;
+  uploadedAt?: string;
+};
 
 export const DeleteImageResponseSchema = z.object({
   success: z.boolean(),

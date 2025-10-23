@@ -2,23 +2,31 @@
 
 import React, { useState } from "react";
 import UploadResume from "./uploadResume";
+import { ResumeUploadResult } from "@/lib/api/schemas/upload";
 
 interface ExpertFormProps {
   onSubmit?: (data: any) => void;
   onGoBack?: () => void;
+  errors?: Record<string, string>;
 }
 
-export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
+export default function ExpertForm({
+  onSubmit,
+  onGoBack,
+  errors,
+}: ExpertFormProps) {
   const [formData, setFormData] = useState({
-    expertise: "",
-    education: "",
-    linkedinProfile: "",
-    website: "",
+    primaryExpertise: "",
+    educationLevel: "",
+    linkedinProfileUrl: "",
+    websiteUrl: "",
   });
 
+  const [resumeData, setResumeData] = useState<ResumeUploadResult | null>(null);
+
   const [dropdownStates, setDropdownStates] = useState({
-    expertise: false,
-    education: false,
+    primaryExpertise: false,
+    educationLevel: false,
   });
 
   const [customExpertise, setCustomExpertise] = useState("");
@@ -47,7 +55,9 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
     "Doctorate [PhD]",
   ];
 
-  const handleDropdownToggle = (dropdown: "expertise" | "education") => {
+  const handleDropdownToggle = (
+    dropdown: "primaryExpertise" | "educationLevel"
+  ) => {
     setDropdownStates((prev) => ({
       ...prev,
       [dropdown]: !prev[dropdown],
@@ -55,10 +65,10 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
   };
 
   const handleOptionSelect = (
-    field: "expertise" | "education",
+    field: "primaryExpertise" | "educationLevel",
     value: string
   ) => {
-    if (field === "expertise" && value === "Other (please specify)") {
+    if (field === "primaryExpertise" && value === "Other (please specify)") {
       setShowCustomInput(true);
       setDropdownStates((prev) => ({
         ...prev,
@@ -73,7 +83,7 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
         ...prev,
         [field]: false,
       }));
-      if (field === "expertise") {
+      if (field === "primaryExpertise") {
         setShowCustomInput(false);
         setCustomExpertise("");
       }
@@ -91,7 +101,7 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
     if (customExpertise.trim()) {
       setFormData((prev) => ({
         ...prev,
-        expertise: customExpertise.trim(),
+        primaryExpertise: customExpertise.trim(),
       }));
       setShowCustomInput(false);
     }
@@ -103,7 +113,13 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
   };
 
   const handleSubmit = () => {
-    onSubmit?.(formData);
+    onSubmit?.({
+      primaryExpertise: formData.primaryExpertise,
+      educationLevel: formData.educationLevel,
+      portfolioOrResume: resumeData,
+      linkedinProfileUrl: formData.linkedinProfileUrl,
+      websiteUrl: formData.websiteUrl,
+    });
   };
 
   return (
@@ -116,17 +132,19 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
         <div className="relative">
           <button
             type="button"
-            onClick={() => handleDropdownToggle("expertise")}
+            onClick={() => handleDropdownToggle("primaryExpertise")}
             className="w-full px-4 py-3 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-left bg-white flex justify-between items-center"
           >
             <span
-              className={formData.expertise ? "text-gray-900" : "text-gray-500"}
+              className={
+                formData.primaryExpertise ? "text-gray-900" : "text-gray-500"
+              }
             >
-              {formData.expertise || "Select expertise"}
+              {formData.primaryExpertise || "Select expertise"}
             </span>
             <svg
               className={`w-5 h-5 text-gray-400 transition-transform ${
-                dropdownStates.expertise ? "rotate-180" : ""
+                dropdownStates.primaryExpertise ? "rotate-180" : ""
               }`}
               fill="none"
               stroke="currentColor"
@@ -141,7 +159,7 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
             </svg>
           </button>
 
-          {dropdownStates.expertise && (
+          {dropdownStates.primaryExpertise && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               <div className="py-1">
                 <div className="px-4 py-2 text-gray-400 text-sm">
@@ -151,7 +169,9 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
                   <button
                     key={option}
                     type="button"
-                    onClick={() => handleOptionSelect("expertise", option)}
+                    onClick={() =>
+                      handleOptionSelect("primaryExpertise", option)
+                    }
                     className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
                   >
                     {option}
@@ -161,6 +181,13 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
             </div>
           )}
         </div>
+
+        {/* Error Message */}
+        {errors?.primaryExpertise && (
+          <p className="text-red-600 text-sm mt-2 font-medium">
+            {errors.primaryExpertise}
+          </p>
+        )}
 
         {/* Custom Expertise Input */}
         {showCustomInput && (
@@ -200,71 +227,84 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
         )}
       </div>
 
-      {
-        /* Educational Background */
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Educational Background*
-          </label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => handleDropdownToggle("education")}
-              className="w-full px-4 py-3 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-left bg-white flex justify-between items-center"
+      {/* Educational Background */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Educational Background*
+        </label>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => handleDropdownToggle("educationLevel")}
+            className="w-full px-4 py-3 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-left bg-white flex justify-between items-center"
+          >
+            <span
+              className={
+                formData.educationLevel ? "text-gray-900" : "text-gray-500"
+              }
             >
-              <span
-                className={
-                  formData.education ? "text-gray-900" : "text-gray-500"
-                }
-              >
-                {formData.education || "Select highest education level"}
-              </span>
-              <svg
-                className={`w-5 h-5 text-gray-400 transition-transform ${
-                  dropdownStates.education ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+              {formData.educationLevel || "Select highest education level"}
+            </span>
+            <svg
+              className={`w-5 h-5 text-gray-400 transition-transform ${
+                dropdownStates.educationLevel ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
 
-            {dropdownStates.education && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-                <div className="py-1">
-                  <div className="px-4 py-2 text-gray-400 text-sm">
-                    Select highest education level
-                  </div>
-                  {educationOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => handleOptionSelect("education", option)}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
-                    >
-                      {option}
-                    </button>
-                  ))}
+          {dropdownStates.educationLevel && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+              <div className="py-1">
+                <div className="px-4 py-2 text-gray-400 text-sm">
+                  Select highest education level
                 </div>
+                {educationOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => handleOptionSelect("educationLevel", option)}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-gray-900"
+                  >
+                    {option}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      }
+
+        {/* Error Message */}
+        {errors?.educationLevel && (
+          <p className="text-red-600 text-sm mt-2 font-medium">
+            {errors.educationLevel}
+          </p>
+        )}
+      </div>
 
       {/* Upload Portfolio/Resume */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-4">
           Upload Portfolio/Resume*
         </label>
-        <UploadResume />
+        <UploadResume
+          value={resumeData}
+          onFileUpload={(data) => setResumeData(data)}
+        />
+        {errors?.portfolioOrResume && (
+          <p className="text-red-600 text-sm mt-2 font-medium">
+            {errors.portfolioOrResume}
+          </p>
+        )}
       </div>
 
       {/* LinkedIn Profile */}
@@ -274,11 +314,18 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
         </label>
         <input
           type="url"
-          value={formData.linkedinProfile}
-          onChange={(e) => handleInputChange("linkedinProfile", e.target.value)}
+          value={formData.linkedinProfileUrl}
+          onChange={(e) =>
+            handleInputChange("linkedinProfileUrl", e.target.value)
+          }
           placeholder="https://linkedin/in/your profile"
           className="w-full px-4 py-3 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-gray-900 placeholder-gray-500"
         />
+        {errors?.linkedinProfileUrl && (
+          <p className="text-red-600 text-sm mt-2 font-medium">
+            {errors.linkedinProfileUrl}
+          </p>
+        )}
       </div>
 
       {/* Website */}
@@ -288,11 +335,16 @@ export default function ExpertForm({ onSubmit, onGoBack }: ExpertFormProps) {
         </label>
         <input
           type="url"
-          value={formData.website}
-          onChange={(e) => handleInputChange("website", e.target.value)}
+          value={formData.websiteUrl}
+          onChange={(e) => handleInputChange("websiteUrl", e.target.value)}
           placeholder="https://portfolio or personal site"
           className="w-full px-4 py-3 border-1 border-[#13672B] rounded-lg focus:outline-none focus:border-[#13672B] focus:ring-1 focus:ring-[#13672B] text-gray-900 placeholder-gray-500"
         />
+        {errors?.websiteUrl && (
+          <p className="text-red-600 text-sm mt-2 font-medium">
+            {errors.websiteUrl}
+          </p>
+        )}
       </div>
 
       {/* Navigation Buttons */}

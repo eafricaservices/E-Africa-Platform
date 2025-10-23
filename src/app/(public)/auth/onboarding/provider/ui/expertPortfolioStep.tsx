@@ -11,11 +11,15 @@ const poppins = Poppins({
 interface NavigationProps {
   onNext: () => void;
   onPrevious: () => void;
+  onSubmit?: (data: any) => void;
+  errors?: Record<string, string>;
 }
 
 export default function ExpertPortfolio({
   onNext,
   onPrevious,
+  onSubmit,
+  errors,
 }: NavigationProps) {
   return (
     <div className={`${poppins.className}`}>
@@ -35,7 +39,11 @@ export default function ExpertPortfolio({
 
       {/* Form Container */}
       <div className="form-ctn mt-8">
-        <ExpertForm onSubmit={onNext} onGoBack={onPrevious} />
+        <ExpertForm
+          onSubmit={onSubmit ?? onNext}
+          onGoBack={onPrevious}
+          errors={errors}
+        />
       </div>
     </div>
   );

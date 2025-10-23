@@ -70,6 +70,10 @@ export async function jsonFetch<T = void>(
       serverMsg ||
       (res.status === 400 || res.status === 422
         ? "Invalid request."
+        : res.status === 401
+        ? "You need to sign in again to continue."
+        : res.status === 403
+        ? "You do not have permission to perform this action."
         : res.status === 404
         ? "Resource not found."
         : res.status === 429

@@ -26,6 +26,7 @@ export default function UploadProfilePhoto({
   const [isDragging, setIsDragging] = useState(false);
   const [uploadMeta, setUploadMeta] =
     useState<ProfilePictureUploadResult | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -53,8 +54,25 @@ export default function UploadProfilePhoto({
     setUploading(true);
     try {
       const result = await uploadProfilePicture(selectedFile);
-      setUploadMeta(result);
-      onFileUpload?.(result);
+
+      const extendedResult: ProfilePictureUploadResult = {
+        ...result,
+        fileName: selectedFile.name,
+        fileType:
+          selectedFile.type ||
+          (result.format ? `image/${result.format}` : undefined),
+        fileSize:
+          typeof selectedFile.size === "number"
+            ? selectedFile.size
+            : result.bytes,
+        fileUrl: result.imageUrl,
+        cloudinaryPublicId: result.publicId,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      setUploadMeta(extendedResult);
+      setDisplayName(selectedFile.name);
+      onFileUpload?.(extendedResult);
     } catch (err) {
       const message =
         err instanceof ApiError
@@ -65,6 +83,7 @@ export default function UploadProfilePhoto({
       onFileUpload?.(null);
       setFileName(null);
       setFileSize(null);
+      setDisplayName(null);
       resetFileInput();
     } finally {
       setUploading(false);
@@ -144,6 +163,7 @@ export default function UploadProfilePhoto({
     setUploadMeta(null);
     setFileName(null);
     setFileSize(null);
+    setDisplayName(null);
     setError("");
     resetFileInput();
     onFileUpload?.(null);
@@ -159,8 +179,9 @@ export default function UploadProfilePhoto({
     }
 
     setUploadMeta(value);
-    setFileName(value.publicId);
-    setFileSize(value.bytes);
+    setFileName(value.fileName ?? value.publicId ?? null);
+    setDisplayName(value.fileName ?? value.publicId ?? null);
+    setFileSize(value.fileSize ?? value.bytes ?? null);
     setError("");
   }, [value]);
 
@@ -217,7 +238,7 @@ export default function UploadProfilePhoto({
           ) : uploadMeta ? (
             <div className="space-y-2">
               <p className="font-medium text-[#13672B]">
-                ✓ {fileName} uploaded successfully
+                ✓ {displayName ?? fileName ?? "File"} uploaded successfully
               </p>
               {fileSize !== null && (
                 <p className="text-sm text-gray-600">

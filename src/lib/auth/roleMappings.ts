@@ -1,9 +1,11 @@
 const CANONICAL_TO_BACKEND_ROLE: Record<string, string> = {
-  serviceprovider: "talent",
-  serviceseeker: "trainee",
+  serviceprovider: "serviceprovider",
+  serviceseeker: "serviceseeker",
 };
 
 const BACKEND_TO_CANONICAL_ROLE: Record<string, string> = {
+  serviceprovider: "serviceprovider",
+  serviceseeker: "serviceseeker",
   talent: "serviceprovider",
   trainee: "serviceseeker",
 };
